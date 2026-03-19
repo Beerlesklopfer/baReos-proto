@@ -1,0 +1,42 @@
+// BAREOS® - Backup Archiving REcovery Open Sourced
+//
+// Copyright (C) 2025 Bareos GmbH & Co. KG
+//
+// Custom Proto-Options fuer Director Command-Messages.
+// Diese Optionen werden vom Python-Generator (generate_commands.py)
+// ausgewertet, um die Command-Registry und Validators zu erzeugen.
+
+syntax = "proto3";
+package bareos;
+
+import "google/protobuf/descriptor.proto";
+
+// Optionen fuer Command-Messages (MessageOptions)
+extend google.protobuf.MessageOptions {
+  // CLI-Name des Befehls (z.B. "status", ".jobs", "run")
+  string command_name = 50001;
+
+  // Kurze Hilfe-Beschreibung (entspricht help_text in commands[])
+  string help_text = 50002;
+
+  // Usage-String (entspricht usage in commands[])
+  string usage = 50003;
+
+  // Erlaubt in RunScript? (entspricht use_in_rs in commands[])
+  bool allowed_in_runscript = 50004;
+
+  // Audit-Logging? (entspricht audit_event in commands[])
+  bool audit_event = 50005;
+}
+
+// Optionen fuer Parameter-Felder (FieldOptions)
+extend google.protobuf.FieldOptions {
+  // Bare arg ohne =Wert (z.B. "yes", "all", "dir")
+  bool bare_flag = 51001;
+
+  // Alternativer CLI-Name (z.B. cli_alias="job" fuer Feld "jobname")
+  string cli_alias = 51002;
+
+  // Pflichtparameter? (Fehler wenn nicht angegeben)
+  bool required = 51003;
+}

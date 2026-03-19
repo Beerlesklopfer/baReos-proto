@@ -1,0 +1,245 @@
+// BAREOS® - Backup Archiving REcovery Open Sourced
+//
+// Copyright (C) 2025 Bareos GmbH & Co. KG
+//
+// Cross-Cutting Concerns (CCC) — Generic Plugin Base
+//
+// Faktorisiert daemon-uebergreifende Typen heraus, die von allen drei
+// Plugin-Typen (Filed, Stored, Director) gemeinsam genutzt werden.
+// Bestehende Filed-Protos (plugin.proto, bareos.proto) koennen spaeter
+// auf import "plugin_ccc.proto" umgestellt werden.
+
+syntax = "proto3";
+package bareos.ccc;
+
+// ============================================================================
+// Universelle Return-Codes (identisch fuer alle Plugin-Typen)
+// Entspricht bRC in lib/plugins.h
+// ============================================================================
+
+enum ReturnCode {
+  RETURN_CODE_UNSPECIFIED = 0;
+  RC_OK = 1;        // Aktion erfolgreich
+  RC_Stop = 2;      // Keine weiteren Plugins aufrufen
+  RC_Error = 3;     // Fehler aufgetreten
+  RC_More = 4;      // Weitere Elemente vorhanden
+  RC_Term = 5;      // Plugin entladen
+  RC_Seen = 6;      // Datei bereits gesehen (checkFile)
+  RC_Core = 7;      // Bareos-Core soll uebernehmen
+  RC_Skip = 8;      // Element ueberspringen
+  RC_Cancel = 9;    // Job abgebrochen
+}
+
+// ============================================================================
+// Message-Typen fuer Logging (identisch fuer alle Daemons)
+// Entspricht msg_types in include/messages_resource_items.h
+// ============================================================================
+
+enum JMsgType {
+  JMSG_TYPE_UNSPECIFIED = 0;
+  JMSG_ABORT = 1;
+  JMSG_DEBUG = 2;
+  JMSG_FATAL = 3;
+  JMSG_ERROR = 4;
+  JMSG_WARNING = 5;
+  JMSG_INFO = 6;
+  JMSG_SAVED = 7;
+  JMSG_NOTSAVED = 8;
+  JMSG_SKIPPED = 9;
+  JMSG_MOUNT = 10;
+  JMSG_ERROR_TERM = 11;
+  JMSG_TERM = 12;
+  JMSG_RESTORED = 13;
+  JMSG_SECURITY = 14;
+  JMSG_ALERT = 15;
+  JMSG_VOLMGMT = 16;
+  JMSG_AUDIT = 17;
+  JMSG_CONFIG_ERROR = 18;
+}
+
+// ============================================================================
+// Plugin-Metadaten (entspricht PluginInformation in lib/plugins.h)
+// ============================================================================
+
+message PluginMetadata {
+  string magic = 1;              // z.B. "*FDPluginData*", "*SDPluginData*"
+  string license = 2;
+  string author = 3;
+  string date = 4;
+  string version = 5;
+  string description = 6;
+  string usage = 7;
+  uint32 interface_version = 8;  // FD=10, SD=4, DIR=4
+}
+
+// ============================================================================
+// Generischer Plugin-Lifecycle (alle Daemons)
+// ============================================================================
+
+service PluginBase {
+  rpc Setup (PluginSetupRequest) returns (PluginSetupResponse);
+  rpc Teardown (PluginTeardownRequest) returns (PluginTeardownResponse);
+  rpc HandleEvent (PluginEventRequest) returns (PluginEventResponse);
+}
+
+message PluginSetupRequest {
+  string daemon_type = 1;       // "filed", "stored", "dird"
+  string plugin_name = 2;
+  map<string, string> config = 3;
+}
+
+message PluginSetupResponse {
+  ReturnCode result = 1;
+  PluginMetadata metadata = 2;
+}
+
+message PluginTeardownRequest {}
+
+message PluginTeardownResponse {
+  ReturnCode result = 1;
+}
+
+// ============================================================================
+// Generisches Event-Handling (Envelope fuer daemon-spezifische Events)
+// ============================================================================
+
+// Gemeinsame Job-Lifecycle-Events (alle 3 Daemons haben diese)
+message CommonJobStart {
+  string data = 1;
+}
+
+message CommonJobEnd {}
+
+message CommonNewPluginOptions {
+  string data = 1;
+}
+
+message PluginEventRequest {
+  oneof event {
+    CommonJobStart job_start = 1;
+    CommonJobEnd job_end = 2;
+    CommonNewPluginOptions new_plugin_options = 3;
+    bytes daemon_specific_event = 15;
+  }
+}
+
+message PluginEventResponse {
+  ReturnCode result = 1;
+}
+
+// ============================================================================
+// Generisches Messaging / Logging (alle Daemons)
+// ============================================================================
+
+service PluginMessaging {
+  rpc JobMessage (JobMessageRequest) returns (JobMessageResponse);
+  rpc DebugMessage (DebugMessageRequest) returns (DebugMessageResponse);
+  rpc GetInstanceCount (GetInstanceCountRequest) returns (GetInstanceCountResponse);
+}
+
+message JobMessageRequest {
+  JMsgType type = 1;
+  bytes msg = 2;
+  int64 line = 3;
+  string file = 4;
+  string function = 5;
+}
+
+message JobMessageResponse {}
+
+message DebugMessageRequest {
+  int64 level = 1;
+  bytes msg = 2;
+  int64 line = 3;
+  string file = 4;
+  string function = 5;
+}
+
+message DebugMessageResponse {}
+
+message GetInstanceCountRequest {}
+
+message GetInstanceCountResponse {
+  uint64 instance_count = 1;
+}
+
+// ============================================================================
+// Generische Variable-Zugriffe (alle Daemons)
+// ============================================================================
+
+enum CommonStringVariable {
+  CSV_UNSPECIFIED = 0;
+  CSV_DaemonName = 1;      // FDName / SDName / DIRName
+  CSV_ClientName = 2;
+  CSV_JobName = 3;
+  CSV_WorkingDir = 4;
+  CSV_BareosVersion = 5;
+  CSV_PluginPath = 6;
+}
+
+enum CommonIntVariable {
+  CIV_UNSPECIFIED = 0;
+  CIV_JobId = 1;
+  CIV_JobLevel = 2;
+  CIV_JobType = 3;
+  CIV_JobStatus = 4;
+  CIV_SinceTime = 5;
+}
+
+service PluginVariables {
+  rpc GetString (GetStringRequest) returns (GetStringResponse);
+  rpc SetString (SetStringRequest) returns (SetStringResponse);
+  rpc GetInt (GetIntRequest) returns (GetIntResponse);
+  rpc SetInt (SetIntRequest) returns (SetIntResponse);
+}
+
+message GetStringRequest {
+  CommonStringVariable var = 1;
+}
+
+message GetStringResponse {
+  bytes value = 1;
+}
+
+message SetStringRequest {
+  CommonStringVariable var = 1;
+  bytes value = 2;
+}
+
+message SetStringResponse {}
+
+message GetIntRequest {
+  CommonIntVariable var = 1;
+}
+
+message GetIntResponse {
+  int64 value = 1;
+}
+
+message SetIntRequest {
+  CommonIntVariable var = 1;
+  int64 value = 2;
+}
+
+message SetIntResponse {}
+
+// ============================================================================
+// Event-Registrierung (alle Daemons)
+// ============================================================================
+
+service PluginEvents {
+  rpc Register (EventRegisterRequest) returns (EventRegisterResponse);
+  rpc Unregister (EventUnregisterRequest) returns (EventUnregisterResponse);
+}
+
+message EventRegisterRequest {
+  repeated string event_names = 1;
+}
+
+message EventRegisterResponse {}
+
+message EventUnregisterRequest {
+  repeated string event_names = 1;
+}
+
+message EventUnregisterResponse {}
