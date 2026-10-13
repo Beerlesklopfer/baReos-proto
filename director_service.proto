@@ -12,6 +12,17 @@ package bareos.director;
 // ==========================================================================
 
 service Director {
+  // Server-Identitaet (ohne Anmeldung): Name, Version, Login-Verfahren
+  rpc GetServerInfo (ServerInfoRequest) returns (ServerInfo);
+
+  // Login Schritt 1: Server-Nonce anfordern (ohne Anmeldung)
+  rpc GetChallenge (ChallengeRequest) returns (ChallengeResponse);
+
+  // Login Schritt 2: Nachweis senden, liefert Session-Token.
+  // Alle uebrigen RPCs verlangen den Token im Metadata-Header
+  // "x-onesimus-session".
+  rpc Login (LoginRequest) returns (LoginResponse);
+
   // Einzelnen Befehl ausfuehren
   rpc ExecuteCommand (CommandRequest) returns (CommandResponse);
 
@@ -20,6 +31,47 @@ service Director {
 
   // Interaktive Session (bidirektionaler Stream)
   rpc InteractiveSession (stream SessionMessage) returns (stream SessionMessage);
+}
+
+// ==========================================================================
+// Authentication
+//
+// Transport is TLS (server certificate, pinned by the client on first use).
+// Login is a challenge-response so the password never crosses the wire:
+//   key   = lowercase hex MD5 of the console password (as for TLS-PSK)
+//   proof = lowercase hex HMAC-SHA256(key, nonce)
+// Console "*UserAgent*" (or empty) authenticates with the Director password.
+// ==========================================================================
+
+message ServerInfoRequest {}
+
+message ServerInfo {
+  string director_name = 1;
+  string version = 2;
+  string product = 3;          // "onesimus-dird"
+  int32 bnet_port = 4;
+}
+
+message ChallengeRequest {
+  string console_name = 1;
+}
+
+message ChallengeResponse {
+  string nonce = 1;            // single use, expires after 60 s
+}
+
+message LoginRequest {
+  string console_name = 1;
+  string nonce = 2;
+  string proof = 3;
+}
+
+message LoginResponse {
+  bool success = 1;
+  string session_token = 2;
+  string error_message = 3;
+  string director_name = 4;
+  string version = 5;
 }
 
 // ==========================================================================
