@@ -40,3 +40,10 @@ tonic_build::configure()
 ```cmake
 BareosProtobuf(director_service.proto)
 ```
+
+## License
+
+GNU Affero General Public License v3.0 only (`AGPL-3.0-only`); see [LICENSE](LICENSE).
+Existing Bareos copyright notices are preserved.
+
+Maintainer: Joerg Bernau <Joerg.Bernau@onesimus.io>.
