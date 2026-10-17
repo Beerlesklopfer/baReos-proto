@@ -27,9 +27,17 @@ API 2 JSON output (`.api 2`); values without a typed field are kept in
 `extra_fields`.
 
 - Read RPCs (list/llist, status, show, dot listings, BVFS/OVFS queries) are
-  implemented by onesimus-dird.
-- Write, session and restore-tree RPCs are defined but answer
-  `UNIMPLEMENTED` until the Director implements them (S-35).
+  implemented by onesimus-dird in every build.
+- Write, session and restore-tree RPCs are implemented only in the
+  onesimus-dird development build (cargo feature `grpc-development`); the
+  production build answers `UNIMPLEMENTED`. Each runs one non-interactive
+  console command and returns `ActionResponse` (text, errors, job ids and
+  the typed job/volume/pool records after the change). Destructive RPCs
+  (Relabel, Prune*, Purge*, Delete*, Truncate) require `confirm = true`.
+- Interactive restore: `StartRestoreSession` builds the file tree and
+  returns a `session_id` (bound to the login); the `RestoreTree*` RPCs are
+  the file selection commands (cd, ls, mark, …), `RestoreTreeDone` starts
+  the restore job.
 - `JobStatus`, `JobType` and `JobLevel` enum numbers are the ASCII codes of
   the catalog characters (`JOB_STATUS_TERMINATED = 84 = 'T'`).
 - Imports `google/protobuf/struct.proto` (well-known types, e.g. Debian

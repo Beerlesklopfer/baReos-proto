@@ -231,18 +231,23 @@ service DirectorApi {
   rpc DotOvfsVersions (DotOvfsVersionsCommand) returns (OvfsVersionsResponse);
 
   // ------------------------------------------------------------------------
-  // Schreibende Befehle (definiert; Implementierung S-35, bis dahin
-  // UNIMPLEMENTED)
+  // Schreibende Befehle (S-35): nur im Entwicklungs-Build des Directors
+  // implementiert (Cargo-Feature grpc-development), im Produktions-Build
+  // UNIMPLEMENTED. Jede RPC fuehrt genau eine nicht interaktive
+  // Konsolenzeile aus ("... yes" wo der Befehl es kennt); Rueckfragen werden
+  // nur beantwortet, wo die RPC es beschreibt, sonst abgebrochen
+  // (ActionResponse.question). Zerstoerende RPCs (Relabel, Prune*, Purge*,
+  // Delete*, Truncate) verlangen confirm = true, sonst INVALID_ARGUMENT.
   // ------------------------------------------------------------------------
 
-  rpc Run (bareos.director.commands.RunCommand) returns (ActionResponse);
-  rpc Rerun (bareos.director.commands.RerunCommand) returns (ActionResponse);
+  rpc Run (RunJobCommand) returns (ActionResponse);
+  rpc Rerun (RerunJobCommand) returns (ActionResponse);
   rpc Cancel (bareos.director.commands.CancelCommand) returns (ActionResponse);
   // restore ... (nicht interaktiv: Auswahl ueber die Parameter, siehe auch
   // StartRestoreSession)
-  rpc Restore (bareos.director.commands.RestoreCommand) returns (ActionResponse);
-  rpc Label (bareos.director.commands.LabelCommand) returns (ActionResponse);
-  rpc Relabel (bareos.director.commands.RelabelCommand) returns (ActionResponse);
+  rpc Restore (RestoreJobCommand) returns (ActionResponse);
+  rpc Label (LabelVolumeCommand) returns (ActionResponse);
+  rpc Relabel (RelabelVolumeCommand) returns (ActionResponse);
   rpc Mount (bareos.director.commands.MountCommand) returns (ActionResponse);
   // unmount / umount
   rpc Unmount (bareos.director.commands.UnmountCommand) returns (ActionResponse);
@@ -250,38 +255,38 @@ service DirectorApi {
   rpc AddVolumes (bareos.director.commands.AddCommand) returns (ActionResponse);
   rpc CreatePool (bareos.director.commands.CreateCommand) returns (ActionResponse);
   // delete volume=<name> [pool=<name>]
-  rpc DeleteVolume (bareos.director.commands.DeleteCommand) returns (ActionResponse);
+  rpc DeleteVolume (DeleteObjectCommand) returns (ActionResponse);
   // delete pool=<name>
-  rpc DeletePool (bareos.director.commands.DeleteCommand) returns (ActionResponse);
+  rpc DeletePool (DeleteObjectCommand) returns (ActionResponse);
   // delete jobid=<ids>
-  rpc DeleteJob (bareos.director.commands.DeleteCommand) returns (ActionResponse);
+  rpc DeleteJob (DeleteObjectCommand) returns (ActionResponse);
   // delete storage storage=<name>
-  rpc DeleteStorage (bareos.director.commands.DeleteCommand) returns (ActionResponse);
+  rpc DeleteStorage (DeleteObjectCommand) returns (ActionResponse);
   rpc Enable (bareos.director.commands.EnableCommand) returns (ActionResponse);
   rpc Disable (bareos.director.commands.DisableCommand) returns (ActionResponse);
   rpc ExportVolumes (bareos.director.commands.ExportCommand) returns (ActionResponse);
   rpc ImportVolumes (bareos.director.commands.ImportCommand) returns (ActionResponse);
   rpc MoveVolumes (bareos.director.commands.MoveCommand) returns (ActionResponse);
   // prune files [client=] [pool=]
-  rpc PruneFiles (bareos.director.commands.PruneCommand) returns (ActionResponse);
+  rpc PruneFiles (PruneTargetCommand) returns (ActionResponse);
   // prune jobs [client=] [pool=]
-  rpc PruneJobs (bareos.director.commands.PruneCommand) returns (ActionResponse);
+  rpc PruneJobs (PruneTargetCommand) returns (ActionResponse);
   // prune volume [=<name>] [all] [pool=]
   rpc PruneVolume (PruneVolumeCommand) returns (ActionResponse);
   // prune stats
-  rpc PruneStats (bareos.director.commands.PruneCommand) returns (ActionResponse);
+  rpc PruneStats (PruneTargetCommand) returns (ActionResponse);
   // prune directory [=<dir>] [client=] [recursive]
   rpc PruneDirectory (PruneDirectoryCommand) returns (ActionResponse);
   // purge files [job= | jobid= | client= | volume=]
-  rpc PurgeFiles (bareos.director.commands.PurgeCommand) returns (ActionResponse);
+  rpc PurgeFiles (PurgeTargetCommand) returns (ActionResponse);
   // purge jobs [client= | volume= | pool=] [jobstatus=]
-  rpc PurgeJobs (bareos.director.commands.PurgeCommand) returns (ActionResponse);
+  rpc PurgeJobs (PurgeTargetCommand) returns (ActionResponse);
   // purge volume[=<name>] [storage=] [pool=] [devicetype=] [drive=] [action=]
-  rpc PurgeVolume (bareos.director.commands.PurgeCommand) returns (ActionResponse);
+  rpc PurgeVolume (PurgeTargetCommand) returns (ActionResponse);
   // purge quota [client=]
-  rpc PurgeQuota (bareos.director.commands.PurgeCommand) returns (ActionResponse);
+  rpc PurgeQuota (PurgeTargetCommand) returns (ActionResponse);
   // update volume=<name> ...
-  rpc UpdateVolume (bareos.director.commands.UpdateCommand) returns (ActionResponse);
+  rpc UpdateVolume (UpdateVolumeCommand) returns (ActionResponse);
   // update pool=<name> ...
   rpc UpdatePool (bareos.director.commands.UpdateCommand) returns (ActionResponse);
   // update slots [storage=] [scan] [drive=]
@@ -290,7 +295,7 @@ service DirectorApi {
   rpc UpdateJob (bareos.director.commands.UpdateCommand) returns (ActionResponse);
   // update stats [days=]
   rpc UpdateStats (bareos.director.commands.UpdateCommand) returns (ActionResponse);
-  rpc Truncate (bareos.director.commands.TruncateCommand) returns (ActionResponse);
+  rpc Truncate (TruncateVolumesCommand) returns (ActionResponse);
   // configure add <resource-type> name=<name> <directives>
   rpc ConfigureAdd (bareos.director.commands.ConfigureAddCommand) returns (ActionResponse);
   // configure export client=<name>
@@ -298,7 +303,7 @@ service DirectorApi {
   rpc ConfigureDelete (bareos.director.commands.ConfigureDeleteCommand) returns (ActionResponse);
   rpc ConfigureUpdate (bareos.director.commands.ConfigureUpdateCommand) returns (ActionResponse);
   rpc Reload (bareos.director.commands.ReloadCommand) returns (ActionResponse);
-  rpc SetDebug (bareos.director.commands.SetdebugCommand) returns (ActionResponse);
+  rpc SetDebug (SetDebugLevelCommand) returns (ActionResponse);
   rpc SetBandwidth (bareos.director.commands.SetbandwidthCommand) returns (ActionResponse);
   rpc SetDevice (bareos.director.commands.SetdeviceCommand) returns (ActionResponse);
   rpc SetIp (bareos.director.commands.SetipCommand) returns (ActionResponse);
@@ -324,8 +329,10 @@ service DirectorApi {
   rpc DotProfileUnassign (bareos.director.commands.DotProfileUnassignCommand) returns (ActionResponse);
 
   // ------------------------------------------------------------------------
-  // Sitzungsbefehle (definiert; S-35). Sie steuern die Konsolensitzung und
-  // haben im typisierten API nur eingeschraenkte Bedeutung.
+  // Sitzungsbefehle (S-35, Entwicklungs-Build). Sie wirken auf die Sitzung
+  // des Session-Tokens. Nicht anwendbar (FAILED_PRECONDITION): Gui, DotApi,
+  // DotGrpc (das Antwortformat legt die RPC fest) und SetIp (keine
+  // Konsolenadresse im gRPC-Pfad).
   // ------------------------------------------------------------------------
 
   // use catalog=<name>
@@ -344,13 +351,14 @@ service DirectorApi {
   rpc DotQuit (bareos.director.commands.DotQuitCommand) returns (ActionResponse);
 
   // ------------------------------------------------------------------------
-  // Interaktive Wiederherstellung: Dateiauswahl im Restore-Baum
-  // (definiert; S-35). StartRestoreSession baut den Baum auf, die
+  // Interaktive Wiederherstellung: Dateiauswahl im Restore-Baum (S-35,
+  // Entwicklungs-Build). StartRestoreSession baut den Baum auf, die
   // RestoreTree*-RPCs entsprechen den Befehlen der Dateiauswahl
-  // (ua_tree.cc), RestoreTreeDone startet den Restore-Job.
+  // (ua_tree.cc), RestoreTreeDone startet den Restore-Job. Die Sitzung
+  // gehoert zum Session-Token; ohne Aufruf endet sie nach 10 Minuten.
   // ------------------------------------------------------------------------
 
-  rpc StartRestoreSession (bareos.director.commands.RestoreCommand) returns (RestoreSessionResponse);
+  rpc StartRestoreSession (RestoreSessionCommand) returns (RestoreSessionResponse);
   // cd <dir>
   rpc RestoreTreeCd (RestoreTreePathCommand) returns (RestoreTreeListResponse);
   // ls / .ls / dir / .dir [pattern]
@@ -983,7 +991,8 @@ message PruneVolumeCommand {
   string volume = 1;
   bool all = 2     [(bareos.bare_flag) = true];
   string pool = 3;
-  bool yes = 4     [(bareos.bare_flag) = true];
+  bool yes = 4     [(bareos.bare_flag) = true];  // ohne Wirkung, siehe confirm
+  bool confirm = 5;  // muss true sein (zerstoerend)
 }
 
 // prune directory [=<dir>] [client=<name>] [recursive] [yes]
@@ -997,7 +1006,8 @@ message PruneDirectoryCommand {
   string directory = 1;
   string client = 2;
   bool recursive = 3  [(bareos.bare_flag) = true];
-  bool yes = 4        [(bareos.bare_flag) = true];
+  bool yes = 4        [(bareos.bare_flag) = true];  // ohne Wirkung, siehe confirm
+  bool confirm = 5;   // muss true sein (zerstoerend)
 }
 
 // update slots [storage=<name>] [scan] [drive=<n>]
@@ -1095,6 +1105,276 @@ message RestoreTreePathCommand {
 }
 
 // ==========================================================================
+// Requests der schreibenden RPCs (S-35), wo die Messages aus
+// director_commands.proto Parameter nicht kennen (yes, confirm, Listen ...)
+// ==========================================================================
+
+// run job=<name> ... yes
+message RunJobCommand {
+  option (bareos.command_name) = "run";
+  option (bareos.help_text) = "Run a job";
+  option (bareos.usage) = "run job=<job-name> [level=] [client=] [fileset=] [pool=] [nextpool=] "
+                          "[storage=] [when=] [since=] [priority=] [jobid=] [spooldata=] "
+                          "[accurate=] [comment=] [catalog=] [pluginoptions=] yes";
+  option (bareos.audit_event) = true;
+
+  string job = 1 [(bareos.required) = true];
+  string level = 2;            // Full, Incremental, Differential, VirtualFull ...
+  string client = 3;
+  string fileset = 4;
+  string pool = 5;
+  string nextpool = 6;
+  string storage = 7;
+  string when = 8;             // "YYYY-MM-DD HH:MM:SS"
+  string since = 9;
+  uint32 priority = 10;
+  uint32 jobid = 11;           // Verify/Migration: Bezugsjob
+  optional bool spooldata = 12;
+  optional bool accurate = 13;
+  string comment = 14;
+  string catalog = 15;
+  string pluginoptions = 16;
+}
+
+// rerun jobid=<ids> | since_jobid= [until_jobid=] | days= / hours= ... yes
+message RerunJobCommand {
+  option (bareos.command_name) = "rerun";
+  option (bareos.help_text) = "Rerun a job";
+  option (bareos.usage) = "rerun jobid=<jobid> | since_jobid=<jobid> [ until_jobid=<jobid> ] | "
+                          "days=<nr_days> | hours=<nr_hours> yes";
+  option (bareos.audit_event) = true;
+
+  repeated uint32 jobid = 1;
+  uint32 since_jobid = 2;
+  uint32 until_jobid = 3;
+  uint32 days = 4;
+  uint32 hours = 5;
+}
+
+// restore ... (nicht interaktiv: "all" oder file=/directory=/fileregex=,
+// dann "done ... yes")
+message RestoreJobCommand {
+  option (bareos.command_name) = "restore";
+  option (bareos.help_text) = "Restore files";
+  option (bareos.usage) = "restore client=<client-name> (jobid=<ids> | [fileset=] [before=] select current) "
+                          "(all | file=<path> ... | directory=<dir/> ... | fileregex=<regex>) "
+                          "[where= | regexwhere= | strip_prefix= add_prefix= add_suffix=] "
+                          "[replace=] [restoreclient=] [restorejob=] [storage=] [comment=] done yes";
+  option (bareos.audit_event) = true;
+
+  string client = 1 [(bareos.required) = true];
+  repeated uint32 jobid = 2;   // leer: juengster Stand (select current) bzw. before
+  string fileset = 3;
+  string pool = 4;
+  string before = 5;           // "YYYY-MM-DD HH:MM:SS"
+  bool all = 6;                // alle Dateien
+  repeated string file = 7;    // volle Pfade
+  repeated string directory = 8;  // mit "/" am Ende, nur mit jobid
+  string fileregex = 9;
+  string where = 10;
+  string regexwhere = 11;
+  string strip_prefix = 12;
+  string add_prefix = 13;
+  string add_suffix = 14;
+  string replace = 15;         // always, ifnewer, ifolder, never
+  string restoreclient = 16;
+  string restorejob = 17;
+  string storage = 18;
+  string comment = 19;
+  string pluginoptions = 20;
+}
+
+// restore ... bis zur Dateiauswahl (StartRestoreSession); die Auswahl
+// folgt mit den RestoreTree*-RPCs
+message RestoreSessionCommand {
+  option (bareos.command_name) = "restore";
+  option (bareos.help_text) = "Restore files, interactive file selection";
+  option (bareos.usage) = "restore client=<client-name> (jobid=<ids> | [fileset=] [before=] select current) "
+                          "[where=] [replace=] [restoreclient=] [restorejob=] [storage=] [comment=]";
+  option (bareos.audit_event) = true;
+
+  string client = 1 [(bareos.required) = true];
+  repeated uint32 jobid = 2;
+  string fileset = 3;
+  string pool = 4;
+  string before = 5;
+  string where = 6;
+  string regexwhere = 7;
+  string strip_prefix = 8;
+  string add_prefix = 9;
+  string add_suffix = 10;
+  string replace = 11;
+  string restoreclient = 12;
+  string restorejob = 13;
+  string storage = 14;
+  string comment = 15;
+  string pluginoptions = 16;
+}
+
+// label storage= volume= pool= [slot=] [drive=] [encrypt] [barcodes] yes
+message LabelVolumeCommand {
+  option (bareos.command_name) = "label";
+  option (bareos.help_text) = "Label a tape";
+  option (bareos.usage) = "label storage=<storage-name> volume=<volume-name> pool=<pool-name> "
+                          "[slot=<slot>] [drive=<drivenum>] [encrypt] [barcodes] yes";
+  option (bareos.audit_event) = true;
+
+  string storage = 1 [(bareos.required) = true];
+  string volume = 2;           // Pflicht ausser bei barcodes
+  string pool = 3 [(bareos.required) = true];
+  uint32 slot = 4;
+  uint32 drive = 5;
+  bool encrypt = 6   [(bareos.bare_flag) = true];
+  bool barcodes = 7  [(bareos.bare_flag) = true];
+}
+
+// relabel storage= oldvolume= volume= [pool=] ... yes (zerstoerend)
+message RelabelVolumeCommand {
+  option (bareos.command_name) = "relabel";
+  option (bareos.help_text) = "Relabel a tape";
+  option (bareos.usage) = "relabel storage=<storage-name> oldvolume=<old-volume-name> "
+                          "volume=<new-volume-name> [pool=<pool-name>] [slot=] [drive=] [encrypt] yes";
+  option (bareos.audit_event) = true;
+
+  string storage = 1 [(bareos.required) = true];
+  string oldvolume = 2 [(bareos.required) = true];
+  string volume = 3 [(bareos.required) = true];
+  string pool = 4;
+  uint32 slot = 5;
+  uint32 drive = 6;
+  bool encrypt = 7 [(bareos.bare_flag) = true];
+  bool confirm = 8;  // muss true sein (zerstoerend)
+}
+
+// delete volume=<name> [pool=] | pool=<name> | jobid=<ids> | storage=<name>
+// (zerstoerend; die Rueckfrage "Are you sure you want to delete" wird mit
+// yes beantwortet)
+message DeleteObjectCommand {
+  option (bareos.command_name) = "delete";
+  option (bareos.help_text) = "Delete volume, pool or job";
+  option (bareos.usage) = "delete volume=<vol-name> [pool=<pool-name>] | pool=<pool-name> | "
+                          "jobid=<jobid1,jobid2,...> | storage=<storage-name>";
+  option (bareos.allowed_in_runscript) = true;
+  option (bareos.audit_event) = true;
+
+  string volume = 1;           // DeleteVolume
+  string pool = 2;             // DeletePool; bei DeleteVolume: Pool des Volumes
+  repeated uint32 jobid = 3;   // DeleteJob
+  string storage = 4;          // DeleteStorage
+  bool confirm = 5;            // muss true sein (zerstoerend)
+}
+
+// prune files|jobs [client=] [pool=] yes, prune stats yes (zerstoerend)
+message PruneTargetCommand {
+  option (bareos.command_name) = "prune";
+  option (bareos.help_text) = "Prune records from catalog";
+  option (bareos.usage) = "prune files [client=<client>] [pool=<pool>] yes | "
+                          "jobs [client=<client>] [pool=<pool>] yes | stats yes";
+  option (bareos.allowed_in_runscript) = true;
+  option (bareos.audit_event) = true;
+
+  string client = 1;
+  string pool = 2;
+  bool confirm = 3;  // muss true sein (zerstoerend)
+}
+
+// purge files|jobs|volume|quota ... (zerstoerend; "Purge (yes/no)?" wird
+// mit yes beantwortet)
+message PurgeTargetCommand {
+  option (bareos.command_name) = "purge";
+  option (bareos.help_text) = "Purge records from catalog";
+  option (bareos.usage) = "purge files [job= | jobid= | client= | volume=] | "
+                          "jobs [client= | volume= | pool=] [jobstatus=] | "
+                          "volume[=<volume>] [action=<action>] [storage=] [pool= | allpools] [drive=] | "
+                          "quota [client=]";
+  option (bareos.allowed_in_runscript) = true;
+  option (bareos.audit_event) = true;
+
+  repeated string volume = 1;  // PurgeVolume: mehrere erlaubt
+  uint32 jobid = 2;
+  string job = 3;
+  string client = 4;
+  string pool = 5;
+  string jobstatus = 6;        // Statuszeichen, durch Komma getrennt
+  string action = 7;           // PurgeVolume: truncate | all
+  string storage = 8;
+  bool allpools = 9  [(bareos.bare_flag) = true];
+  uint32 drive = 10;
+  string devicetype = 11;
+  bool confirm = 12;           // muss true sein (zerstoerend)
+}
+
+// update volume=<name> <eigenschaften> | update volume allfrompool=<pool>
+// | update volume fromallpools
+message UpdateVolumeCommand {
+  option (bareos.command_name) = "update volume";
+  option (bareos.help_text) = "Update volume records";
+  option (bareos.usage) = "update volume=<volume-name> [volstatus=] [volretention=] [voluse=] "
+                          "[maxvolbytes=] [maxvoljobs=] [maxvolfiles=] [slot=] [recycle=] "
+                          "[inchanger=] [enabled=] [actiononpurge=] [pool=] [recyclepool=] "
+                          "[storage=] [frompool] [encrypt=] | allfrompool=<pool> | fromallpools";
+  option (bareos.allowed_in_runscript) = true;
+  option (bareos.audit_event) = true;
+
+  string volume = 1;
+  string allfrompool = 2;
+  bool fromallpools = 3  [(bareos.bare_flag) = true];
+  string volstatus = 4;        // Append, Full, Used, Recycle, Purged, Error, Archive, Read-Only, Disabled
+  string volretention = 5;     // Zeitangabe, z.B. "30 days"
+  string voluse = 6;
+  string maxvolbytes = 7;      // Groesse, z.B. "10 g"
+  optional uint32 maxvoljobs = 8;
+  optional uint32 maxvolfiles = 9;
+  optional uint32 slot = 10;
+  optional bool recycle = 11;
+  optional bool inchanger = 12;
+  string enabled = 13;         // yes, no, archived
+  string actiononpurge = 14;   // none, truncate
+  string pool = 15;
+  string recyclepool = 16;
+  string storage = 17;
+  bool frompool = 18;          // Werte aus der Pool-Ressource
+  string encrypt = 19;         // yes, no, rotate
+}
+
+// truncate volstatus=Purged [storage=] [pool=] [volume=] [drive=] yes
+// (zerstoerend)
+message TruncateVolumesCommand {
+  option (bareos.command_name) = "truncate";
+  option (bareos.help_text) = "Truncate purged volumes";
+  option (bareos.usage) = "truncate volstatus=Purged [storage=<storage>] [pool=<pool>] "
+                          "[volume=<volume>] [drive=<drivenum>] yes";
+  option (bareos.allowed_in_runscript) = true;
+  option (bareos.audit_event) = true;
+
+  string storage = 1;
+  string pool = 2;
+  string volume = 3;
+  optional uint32 drive = 4;
+  bool confirm = 5;  // muss true sein (zerstoerend)
+}
+
+// setdebug level=<n> [trace=0/1] [timestamp=0/1] [hangup=] dir | all |
+// client=<name> | storage=<name>
+message SetDebugLevelCommand {
+  option (bareos.command_name) = "setdebug";
+  option (bareos.help_text) = "Sets debug level";
+  option (bareos.usage) = "setdebug level=<nn> [trace=0/1] [timestamp=0/1] [hangup=<n>] "
+                          "dir | all | client=<client-name> | storage=<storage-name>";
+  option (bareos.allowed_in_runscript) = true;
+  option (bareos.audit_event) = true;
+
+  uint32 level = 1;
+  optional bool trace = 2;
+  optional bool timestamp = 3;
+  optional uint32 hangup = 4;
+  bool dir = 5     [(bareos.bare_flag) = true];
+  bool all = 6     [(bareos.bare_flag) = true];
+  string client = 7;
+  string storage = 8;
+}
+
+// ==========================================================================
 // Gemeinsame Ergebnis-Messages
 // ==========================================================================
 
@@ -1123,6 +1403,12 @@ message ActionResponse {
   repeated string warnings = 4;
   repeated uint32 jobids = 5;              // gestartete/betroffene Jobs
   google.protobuf.Struct result = 6;       // API-2-Ergebnis, falls vorhanden
+  // Datensaetze nach der Aenderung (aus list jobid= / volume= / pool=)
+  repeated JobInfo jobs = 7;
+  repeated VolumeInfo volumes = 8;
+  repeated PoolInfo pools = 9;
+  string question = 10;                    // abgebrochene Rueckfrage des Directors
+  string command = 11;                     // ausgefuehrte Konsolenzeile
 }
 
 // Name eines Eintrags (Punkt-Auflistungen)
