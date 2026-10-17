@@ -13,35 +13,35 @@
 // Alle 88+ Commands aus ua_cmds.cc sind hier definiert (M13 abgeschlossen).
 
 syntax = "proto3";
-package bareos.director.commands;
+package onesimus.director.commands;
 
-import "bareos_options.proto";
+import "onesimus_options.proto";
 
 // ==========================================================================
 // status — Report status
 // ==========================================================================
 
 message StatusCommand {
-  option (bareos.command_name) = "status";
-  option (bareos.help_text) = "Report status";
-  option (bareos.usage) = "status [all | dir | days=<nn> | "
+  option (onesimus.command_name) = "status";
+  option (onesimus.help_text) = "Report status";
+  option (onesimus.usage) = "status [all | dir | days=<nn> | "
                           "client[=<client-name>] | storage[=<storage-name>] | "
                           "schedule[=<schedule-name>] | "
                           "subscriptions | configuration | "
                           "[header] [running] [terminated]]";
-  option (bareos.audit_event) = true;
+  option (onesimus.audit_event) = true;
 
-  bool all = 1         [(bareos.bare_flag) = true];
-  bool dir = 2         [(bareos.bare_flag) = true];
+  bool all = 1         [(onesimus.bare_flag) = true];
+  bool dir = 2         [(onesimus.bare_flag) = true];
   string client = 3;
   string storage = 4;
   string schedule = 5;
   int32 days = 6;
-  bool subscriptions = 7 [(bareos.bare_flag) = true];
-  bool configuration = 8 [(bareos.bare_flag) = true];
-  bool header = 9      [(bareos.bare_flag) = true];
-  bool running = 10    [(bareos.bare_flag) = true];
-  bool terminated = 11 [(bareos.bare_flag) = true];
+  bool subscriptions = 7 [(onesimus.bare_flag) = true];
+  bool configuration = 8 [(onesimus.bare_flag) = true];
+  bool header = 9      [(onesimus.bare_flag) = true];
+  bool running = 10    [(onesimus.bare_flag) = true];
+  bool terminated = 11 [(onesimus.bare_flag) = true];
 }
 
 // ==========================================================================
@@ -49,9 +49,9 @@ message StatusCommand {
 // ==========================================================================
 
 message RunCommand {
-  option (bareos.command_name) = "run";
-  option (bareos.help_text) = "Run a job";
-  option (bareos.usage) = "run [job=<job-name>] [client=<client-name>] "
+  option (onesimus.command_name) = "run";
+  option (onesimus.help_text) = "Run a job";
+  option (onesimus.usage) = "run [job=<job-name>] [client=<client-name>] "
                           "[fileset=<fileset-name>] [level=<level>] "
                           "[storage=<storage-name>] [where=<path>] "
                           "[when=<universal-time-specification>] "
@@ -59,7 +59,7 @@ message RunCommand {
                           "[accurate=<yes|no>] [comment=<text>] "
                           "[spooldata=<yes|no>] [priority=<number>] "
                           "[jobid=<number>] [catalog=<catalog-name>] [yes]";
-  option (bareos.audit_event) = true;
+  option (onesimus.audit_event) = true;
 
   string job = 1;
   string client = 2;
@@ -76,7 +76,7 @@ message RunCommand {
   int32 priority = 13;
   int32 jobid = 14;
   string catalog = 15;
-  bool yes = 16 [(bareos.bare_flag) = true];
+  bool yes = 16 [(onesimus.bare_flag) = true];
 }
 
 // ==========================================================================
@@ -84,21 +84,21 @@ message RunCommand {
 // ==========================================================================
 
 message ListCommand {
-  option (bareos.command_name) = "list";
-  option (bareos.help_text) = "List objects from catalog";
-  option (bareos.usage) = "list [jobs | jobtotals | jobid=<id> | "
+  option (onesimus.command_name) = "list";
+  option (onesimus.help_text) = "List objects from catalog";
+  option (onesimus.usage) = "list [jobs | jobtotals | jobid=<id> | "
                           "volumes | pool=<pool-name> | media [type=<type>] | "
                           "files jobid=<id> | clients | pools]";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 
-  bool jobs = 1        [(bareos.bare_flag) = true];
-  bool jobtotals = 2   [(bareos.bare_flag) = true];
-  bool volumes = 3     [(bareos.bare_flag) = true];
-  bool clients = 4     [(bareos.bare_flag) = true];
-  bool pools = 5       [(bareos.bare_flag) = true];
-  bool media = 6       [(bareos.bare_flag) = true];
-  bool files = 7       [(bareos.bare_flag) = true];
+  bool jobs = 1        [(onesimus.bare_flag) = true];
+  bool jobtotals = 2   [(onesimus.bare_flag) = true];
+  bool volumes = 3     [(onesimus.bare_flag) = true];
+  bool clients = 4     [(onesimus.bare_flag) = true];
+  bool pools = 5       [(onesimus.bare_flag) = true];
+  bool media = 6       [(onesimus.bare_flag) = true];
+  bool files = 7       [(onesimus.bare_flag) = true];
   int32 jobid = 8;
   string job = 9;
   string pool = 10;
@@ -111,21 +111,21 @@ message ListCommand {
 // ==========================================================================
 
 message CancelCommand {
-  option (bareos.command_name) = "cancel";
-  option (bareos.help_text) = "Cancel a job";
-  option (bareos.usage) = "cancel [jobid=<number> | job=<job-name> | "
+  option (onesimus.command_name) = "cancel";
+  option (onesimus.help_text) = "Cancel a job";
+  option (onesimus.usage) = "cancel [jobid=<number> | job=<job-name> | "
                           "ujobid=<unique-job-id>] "
                           "[storage=<storage-name>] [state=<state>] "
                           "[all] [yes]";
-  option (bareos.audit_event) = true;
+  option (onesimus.audit_event) = true;
 
   int32 jobid = 1;
   string job = 2;
   string ujobid = 3;
   string storage = 4;
   string state = 5;
-  bool all = 6  [(bareos.bare_flag) = true];
-  bool yes = 7  [(bareos.bare_flag) = true];
+  bool all = 6  [(onesimus.bare_flag) = true];
+  bool yes = 7  [(onesimus.bare_flag) = true];
 }
 
 // ==========================================================================
@@ -152,52 +152,52 @@ enum ConfigureResourceType {
 
 // configure add <resourcetype> name=<name> key=value ...
 message ConfigureAddCommand {
-  option (bareos.command_name) = "configure add";
-  option (bareos.help_text) = "Add a new director resource";
-  option (bareos.usage) = "configure add <resourcetype> name=<name> "
+  option (onesimus.command_name) = "configure add";
+  option (onesimus.help_text) = "Add a new director resource";
+  option (onesimus.usage) = "configure add <resourcetype> name=<name> "
                           "[key=value ...]";
-  option (bareos.audit_event) = true;
+  option (onesimus.audit_event) = true;
 
-  ConfigureResourceType resource_type = 1 [(bareos.required) = true];
-  string name = 2   [(bareos.required) = true];
+  ConfigureResourceType resource_type = 1 [(onesimus.required) = true];
+  string name = 2   [(onesimus.required) = true];
   // Additional key=value pairs as resource directives
   map<string, string> directives = 3;
 }
 
 // configure delete <resourcetype> name=<name> [yes]
 message ConfigureDeleteCommand {
-  option (bareos.command_name) = "configure delete";
-  option (bareos.help_text) = "Delete a director resource";
-  option (bareos.usage) = "configure delete <resourcetype> name=<name> [yes]";
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = "configure delete";
+  option (onesimus.help_text) = "Delete a director resource";
+  option (onesimus.usage) = "configure delete <resourcetype> name=<name> [yes]";
+  option (onesimus.audit_event) = true;
 
-  ConfigureResourceType resource_type = 1 [(bareos.required) = true];
-  string name = 2   [(bareos.required) = true];
-  bool yes = 3      [(bareos.bare_flag) = true];
+  ConfigureResourceType resource_type = 1 [(onesimus.required) = true];
+  string name = 2   [(onesimus.required) = true];
+  bool yes = 3      [(onesimus.bare_flag) = true];
 }
 
 // configure update <resourcetype> name=<name> key=value ...
 message ConfigureUpdateCommand {
-  option (bareos.command_name) = "configure update";
-  option (bareos.help_text) = "Update an existing director resource";
-  option (bareos.usage) = "configure update <resourcetype> name=<name> "
+  option (onesimus.command_name) = "configure update";
+  option (onesimus.help_text) = "Update an existing director resource";
+  option (onesimus.usage) = "configure update <resourcetype> name=<name> "
                           "key=value [key=value ...]";
-  option (bareos.audit_event) = true;
+  option (onesimus.audit_event) = true;
 
-  ConfigureResourceType resource_type = 1 [(bareos.required) = true];
-  string name = 2   [(bareos.required) = true];
+  ConfigureResourceType resource_type = 1 [(onesimus.required) = true];
+  string name = 2   [(onesimus.required) = true];
   // Key=value pairs to update
   map<string, string> directives = 3;
 }
 
 // configure export client=<client>
 message ConfigureExportCommand {
-  option (bareos.command_name) = "configure export";
-  option (bareos.help_text) = "Export client configuration for File Daemon";
-  option (bareos.usage) = "configure export client=<client-name>";
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = "configure export";
+  option (onesimus.help_text) = "Export client configuration for File Daemon";
+  option (onesimus.usage) = "configure export client=<client-name>";
+  option (onesimus.audit_event) = true;
 
-  string client = 1 [(bareos.required) = true];
+  string client = 1 [(onesimus.required) = true];
 }
 
 // ==========================================================================
@@ -205,13 +205,13 @@ message ConfigureExportCommand {
 // ==========================================================================
 
 message DotGrpcCommand {
-  option (bareos.command_name) = ".grpc";
-  option (bareos.help_text) = "Switch to gRPC/Protobuf response mode";
-  option (bareos.usage) = ".grpc [on | off] [format=<proto|json|text>] [compact=<yes|no>]";
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = ".grpc";
+  option (onesimus.help_text) = "Switch to gRPC/Protobuf response mode";
+  option (onesimus.usage) = ".grpc [on | off] [format=<proto|json|text>] [compact=<yes|no>]";
+  option (onesimus.audit_event) = true;
 
-  bool on = 1   [(bareos.bare_flag) = true];
-  bool off = 2  [(bareos.bare_flag) = true];
+  bool on = 1   [(onesimus.bare_flag) = true];
+  bool off = 2  [(onesimus.bare_flag) = true];
   // Response serialization: "proto" (binary protobuf), "json" (JSON), "text" (human-readable)
   string format = 3;
   // Compact output (no indentation/newlines)
@@ -223,8 +223,8 @@ message DotGrpcCommand {
 // ==========================================================================
 
 message VersionCommand {
-  option (bareos.command_name) = "version";
-  option (bareos.help_text) = "Print Director version";
+  option (onesimus.command_name) = "version";
+  option (onesimus.help_text) = "Print Director version";
 }
 
 // ==========================================================================
@@ -232,43 +232,43 @@ message VersionCommand {
 // ==========================================================================
 
 message DotSqlCommand {
-  option (bareos.command_name) = ".sql";
-  option (bareos.help_text) = "Send an arbitrary SQL command";
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = ".sql";
+  option (onesimus.help_text) = "Send an arbitrary SQL command";
+  option (onesimus.audit_event) = true;
 
   string query = 1;
 }
 
 message DotSqlTablesCommand {
-  option (bareos.command_name) = ".sqltables";
-  option (bareos.help_text) = "List catalog tables";
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = ".sqltables";
+  option (onesimus.help_text) = "List catalog tables";
+  option (onesimus.audit_event) = true;
 
   string catalog = 1;
 }
 
 message DotSqlSchemaCommand {
-  option (bareos.command_name) = ".sqlschema";
-  option (bareos.help_text) = "Show table schema (columns, types)";
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = ".sqlschema";
+  option (onesimus.help_text) = "Show table schema (columns, types)";
+  option (onesimus.audit_event) = true;
 
   string table = 1;
   string catalog = 2;
 }
 
 message DotSqlCountCommand {
-  option (bareos.command_name) = ".sqlcount";
-  option (bareos.help_text) = "Show row count for tables";
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = ".sqlcount";
+  option (onesimus.help_text) = "Show row count for tables";
+  option (onesimus.audit_event) = true;
 
   string table = 1;
   string catalog = 2;
 }
 
 message SqlQueryCommand {
-  option (bareos.command_name) = "sqlquery";
-  option (bareos.help_text) = "Use SQL to query catalog";
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = "sqlquery";
+  option (onesimus.help_text) = "Use SQL to query catalog";
+  option (onesimus.audit_event) = true;
 
   string query = 1;
 }
@@ -278,18 +278,18 @@ message SqlQueryCommand {
 // ==========================================================================
 
 message DotAclListCommand {
-  option (bareos.command_name) = ".acl";
-  option (bareos.help_text) = "Manage console ACLs in database";
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = ".acl";
+  option (onesimus.help_text) = "Manage console ACLs in database";
+  option (onesimus.audit_event) = true;
 
   // subcmd = "list" (implicit for this message)
   string console = 1;  // Optional: show ACLs of another console
 }
 
 message DotAclSetCommand {
-  option (bareos.command_name) = ".acl";
-  option (bareos.help_text) = "Manage console ACLs in database";
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = ".acl";
+  option (onesimus.help_text) = "Manage console ACLs in database";
+  option (onesimus.audit_event) = true;
 
   // subcmd = "set"
   string console = 1;
@@ -298,9 +298,9 @@ message DotAclSetCommand {
 }
 
 message DotAclDeleteCommand {
-  option (bareos.command_name) = ".acl";
-  option (bareos.help_text) = "Manage console ACLs in database";
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = ".acl";
+  option (onesimus.help_text) = "Manage console ACLs in database";
+  option (onesimus.audit_event) = true;
 
   // subcmd = "delete"
   string console = 1;
@@ -309,9 +309,9 @@ message DotAclDeleteCommand {
 }
 
 message DotAclClearCommand {
-  option (bareos.command_name) = ".acl";
-  option (bareos.help_text) = "Manage console ACLs in database";
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = ".acl";
+  option (onesimus.help_text) = "Manage console ACLs in database";
+  option (onesimus.audit_event) = true;
 
   // subcmd = "clear"
   string console = 1;
@@ -319,9 +319,9 @@ message DotAclClearCommand {
 }
 
 message DotAclCopyCommand {
-  option (bareos.command_name) = ".acl";
-  option (bareos.help_text) = "Manage console ACLs in database";
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = ".acl";
+  option (onesimus.help_text) = "Manage console ACLs in database";
+  option (onesimus.audit_event) = true;
 
   // subcmd = "copy"
   string from = 1;
@@ -329,26 +329,26 @@ message DotAclCopyCommand {
 }
 
 message DotProfileListCommand {
-  option (bareos.command_name) = ".profile";
-  option (bareos.help_text) = "Manage ACL profiles in database";
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = ".profile";
+  option (onesimus.help_text) = "Manage ACL profiles in database";
+  option (onesimus.audit_event) = true;
 
   // subcmd = "list" (implicit)
 }
 
 message DotProfileCreateCommand {
-  option (bareos.command_name) = ".profile";
-  option (bareos.help_text) = "Manage ACL profiles in database";
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = ".profile";
+  option (onesimus.help_text) = "Manage ACL profiles in database";
+  option (onesimus.audit_event) = true;
 
   // subcmd = "create"
   string name = 1;
 }
 
 message DotProfileSetCommand {
-  option (bareos.command_name) = ".profile";
-  option (bareos.help_text) = "Manage ACL profiles in database";
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = ".profile";
+  option (onesimus.help_text) = "Manage ACL profiles in database";
+  option (onesimus.audit_event) = true;
 
   // subcmd = "set"
   string name = 1;
@@ -357,9 +357,9 @@ message DotProfileSetCommand {
 }
 
 message DotProfileDeleteCommand {
-  option (bareos.command_name) = ".profile";
-  option (bareos.help_text) = "Manage ACL profiles in database";
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = ".profile";
+  option (onesimus.help_text) = "Manage ACL profiles in database";
+  option (onesimus.audit_event) = true;
 
   // subcmd = "delete"
   string name = 1;
@@ -368,9 +368,9 @@ message DotProfileDeleteCommand {
 }
 
 message DotProfileAssignCommand {
-  option (bareos.command_name) = ".profile";
-  option (bareos.help_text) = "Manage ACL profiles in database";
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = ".profile";
+  option (onesimus.help_text) = "Manage ACL profiles in database";
+  option (onesimus.audit_event) = true;
 
   // subcmd = "assign"
   string console = 1;
@@ -378,9 +378,9 @@ message DotProfileAssignCommand {
 }
 
 message DotProfileUnassignCommand {
-  option (bareos.command_name) = ".profile";
-  option (bareos.help_text) = "Manage ACL profiles in database";
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = ".profile";
+  option (onesimus.help_text) = "Manage ACL profiles in database";
+  option (onesimus.audit_event) = true;
 
   // subcmd = "unassign"
   string console = 1;
@@ -392,29 +392,29 @@ message DotProfileUnassignCommand {
 // ==========================================================================
 
 message DotCommand {
-  option (bareos.command_name) = ".";
-  option (bareos.help_text) = "no op";
-  option (bareos.allowed_in_runscript) = true;
+  option (onesimus.command_name) = ".";
+  option (onesimus.help_text) = "no op";
+  option (onesimus.allowed_in_runscript) = true;
 }
 
 message DotActiononpurgeCommand {
-  option (bareos.command_name) = ".actiononpurge";
-  option (bareos.help_text) = "List possible actions on purge";
-  option (bareos.allowed_in_runscript) = true;
+  option (onesimus.command_name) = ".actiononpurge";
+  option (onesimus.help_text) = "List possible actions on purge";
+  option (onesimus.allowed_in_runscript) = true;
 }
 
 message DotApiCommand {
-  option (bareos.command_name) = ".api";
-  option (bareos.help_text) = "Switch between different api modes";
-  option (bareos.usage) = ".api [ 0 | 1 | 2 | off | on | json ] [compact=<yes|no>]";
+  option (onesimus.command_name) = ".api";
+  option (onesimus.help_text) = "Switch between different api modes";
+  option (onesimus.usage) = ".api [ 0 | 1 | 2 | off | on | json ] [compact=<yes|no>]";
 
   string compact = 1;
 }
 
 message DotAuthorizedCommand {
-  option (bareos.command_name) = ".authorized";
-  option (bareos.help_text) = "Check for authorization";
-  option (bareos.usage) = ".authorized job=<job-name> | client=<client-name> | "
+  option (onesimus.command_name) = ".authorized";
+  option (onesimus.help_text) = "Check for authorization";
+  option (onesimus.usage) = ".authorized job=<job-name> | client=<client-name> | "
                           "storage=<storage-name> | schedule=<schedule-name> | "
                           "pool=<pool-name> | cmd=<command> | fileset=<fileset-name> | "
                           "catalog=<catalog>";
@@ -430,33 +430,33 @@ message DotAuthorizedCommand {
 }
 
 message DotCatalogsCommand {
-  option (bareos.command_name) = ".catalogs";
-  option (bareos.help_text) = "List all catalog resources";
+  option (onesimus.command_name) = ".catalogs";
+  option (onesimus.help_text) = "List all catalog resources";
 }
 
 message DotClientsCommand {
-  option (bareos.command_name) = ".clients";
-  option (bareos.help_text) = "List all client resources";
-  option (bareos.usage) = ".clients [enabled | disabled]";
-  option (bareos.allowed_in_runscript) = true;
+  option (onesimus.command_name) = ".clients";
+  option (onesimus.help_text) = "List all client resources";
+  option (onesimus.usage) = ".clients [enabled | disabled]";
+  option (onesimus.allowed_in_runscript) = true;
 }
 
 message DotConsolesCommand {
-  option (bareos.command_name) = ".consoles";
-  option (bareos.help_text) = "List all console resources";
-  option (bareos.allowed_in_runscript) = true;
+  option (onesimus.command_name) = ".consoles";
+  option (onesimus.help_text) = "List all console resources";
+  option (onesimus.allowed_in_runscript) = true;
 }
 
 message DotUsersCommand {
-  option (bareos.command_name) = ".users";
-  option (bareos.help_text) = "List all user resources";
-  option (bareos.allowed_in_runscript) = true;
+  option (onesimus.command_name) = ".users";
+  option (onesimus.help_text) = "List all user resources";
+  option (onesimus.allowed_in_runscript) = true;
 }
 
 message DotDefaultsCommand {
-  option (bareos.command_name) = ".defaults";
-  option (bareos.help_text) = "Get default settings";
-  option (bareos.usage) = ".defaults job=<job-name> | client=<client-name> | "
+  option (onesimus.command_name) = ".defaults";
+  option (onesimus.help_text) = "Get default settings";
+  option (onesimus.usage) = ".defaults job=<job-name> | client=<client-name> | "
                           "storage=<storage-name> | pool=<pool-name>";
 
   string job = 1;
@@ -466,134 +466,134 @@ message DotDefaultsCommand {
 }
 
 message DotFilesetsCommand {
-  option (bareos.command_name) = ".filesets";
-  option (bareos.help_text) = "List all filesets";
+  option (onesimus.command_name) = ".filesets";
+  option (onesimus.help_text) = "List all filesets";
 }
 
 message DotHelpCommand {
-  option (bareos.command_name) = ".help";
-  option (bareos.help_text) = "Print parsable information about a command";
-  option (bareos.usage) = ".help [ all | item=cmd ]";
+  option (onesimus.command_name) = ".help";
+  option (onesimus.help_text) = "Print parsable information about a command";
+  option (onesimus.usage) = ".help [ all | item=cmd ]";
 }
 
 message DotJobdefsCommand {
-  option (bareos.command_name) = ".jobdefs";
-  option (bareos.help_text) = "List all job defaults resources";
-  option (bareos.allowed_in_runscript) = true;
+  option (onesimus.command_name) = ".jobdefs";
+  option (onesimus.help_text) = "List all job defaults resources";
+  option (onesimus.allowed_in_runscript) = true;
 }
 
 message DotJobsCommand {
-  option (bareos.command_name) = ".jobs";
-  option (bareos.help_text) = "List all job resources";
-  option (bareos.usage) = ".jobs [type=<jobtype>] | [enabled | disabled]";
-  option (bareos.allowed_in_runscript) = true;
+  option (onesimus.command_name) = ".jobs";
+  option (onesimus.help_text) = "List all job resources";
+  option (onesimus.usage) = ".jobs [type=<jobtype>] | [enabled | disabled]";
+  option (onesimus.allowed_in_runscript) = true;
 
   string type = 1;
 }
 
 message DotJobstatusCommand {
-  option (bareos.command_name) = ".jobstatus";
-  option (bareos.help_text) = "List jobstatus information";
-  option (bareos.usage) = ".jobstatus [ =<jobstatus> ]";
-  option (bareos.allowed_in_runscript) = true;
+  option (onesimus.command_name) = ".jobstatus";
+  option (onesimus.help_text) = "List jobstatus information";
+  option (onesimus.usage) = ".jobstatus [ =<jobstatus> ]";
+  option (onesimus.allowed_in_runscript) = true;
 }
 
 message DotLevelsCommand {
-  option (bareos.command_name) = ".levels";
-  option (bareos.help_text) = "List all backup levels";
+  option (onesimus.command_name) = ".levels";
+  option (onesimus.help_text) = "List all backup levels";
 }
 
 message DotLocationsCommand {
-  option (bareos.command_name) = ".locations";
-  option (bareos.allowed_in_runscript) = true;
+  option (onesimus.command_name) = ".locations";
+  option (onesimus.allowed_in_runscript) = true;
 }
 
 message DotMessagesCommand {
-  option (bareos.command_name) = ".messages";
-  option (bareos.help_text) = "Display pending messages";
+  option (onesimus.command_name) = ".messages";
+  option (onesimus.help_text) = "Display pending messages";
 }
 
 message DotMediaCommand {
-  option (bareos.command_name) = ".media";
-  option (bareos.help_text) = "List all medias";
-  option (bareos.allowed_in_runscript) = true;
+  option (onesimus.command_name) = ".media";
+  option (onesimus.help_text) = "List all medias";
+  option (onesimus.allowed_in_runscript) = true;
 }
 
 message DotMediatypesCommand {
-  option (bareos.command_name) = ".mediatypes";
-  option (bareos.help_text) = "List all media types";
-  option (bareos.allowed_in_runscript) = true;
+  option (onesimus.command_name) = ".mediatypes";
+  option (onesimus.help_text) = "List all media types";
+  option (onesimus.allowed_in_runscript) = true;
 }
 
 message DotMsgsCommand {
-  option (bareos.command_name) = ".msgs";
-  option (bareos.help_text) = "List all message resources";
+  option (onesimus.command_name) = ".msgs";
+  option (onesimus.help_text) = "List all message resources";
 }
 
 message DotPoolsCommand {
-  option (bareos.command_name) = ".pools";
-  option (bareos.help_text) = "List all pool resources";
-  option (bareos.usage) = ".pools type=<pooltype>";
-  option (bareos.allowed_in_runscript) = true;
+  option (onesimus.command_name) = ".pools";
+  option (onesimus.help_text) = "List all pool resources";
+  option (onesimus.usage) = ".pools type=<pooltype>";
+  option (onesimus.allowed_in_runscript) = true;
 
   string type = 1;
 }
 
 message DotProfilesCommand {
-  option (bareos.command_name) = ".profiles";
-  option (bareos.help_text) = "List all profile resources";
-  option (bareos.allowed_in_runscript) = true;
+  option (onesimus.command_name) = ".profiles";
+  option (onesimus.help_text) = "List all profile resources";
+  option (onesimus.allowed_in_runscript) = true;
 }
 
 message DotQuitCommand {
-  option (bareos.command_name) = ".quit";
-  option (bareos.help_text) = "Close connection";
+  option (onesimus.command_name) = ".quit";
+  option (onesimus.help_text) = "Close connection";
 }
 
 message DotScheduleCommand {
-  option (bareos.command_name) = ".schedule";
-  option (bareos.help_text) = "List all schedule resources";
-  option (bareos.usage) = ".schedule [enabled | disabled]";
+  option (onesimus.command_name) = ".schedule";
+  option (onesimus.help_text) = "List all schedule resources";
+  option (onesimus.usage) = ".schedule [enabled | disabled]";
 }
 
 message DotStatusCommand {
-  option (bareos.command_name) = ".status";
-  option (bareos.help_text) = "Report status";
-  option (bareos.usage) = ".status dir ( current | last | header | scheduled | running |"
+  option (onesimus.command_name) = ".status";
+  option (onesimus.help_text) = "Report status";
+  option (onesimus.usage) = ".status dir ( current | last | header | scheduled | running |"
                           " terminated ) | storage=<storage> [ header | waitreservation "
                           "| devices | volumes | spooling | running | terminated ] | "
                           "client=<client> [ header | terminated | running ]";
-  option (bareos.audit_event) = true;
+  option (onesimus.audit_event) = true;
 
   string storage = 1;
   string client = 2;
 }
 
 message DotStoragesCommand {
-  option (bareos.command_name) = ".storages";
-  option (bareos.help_text) = "List all storage resources";
-  option (bareos.usage) = ".storages [enabled | disabled]";
-  option (bareos.allowed_in_runscript) = true;
+  option (onesimus.command_name) = ".storages";
+  option (onesimus.help_text) = "List all storage resources";
+  option (onesimus.usage) = ".storages [enabled | disabled]";
+  option (onesimus.allowed_in_runscript) = true;
 }
 
 message DotTypesCommand {
-  option (bareos.command_name) = ".types";
-  option (bareos.help_text) = "List all job types";
+  option (onesimus.command_name) = ".types";
+  option (onesimus.help_text) = "List all job types";
 }
 
 message DotVolstatusCommand {
-  option (bareos.command_name) = ".volstatus";
-  option (bareos.help_text) = "List all volume status";
-  option (bareos.allowed_in_runscript) = true;
+  option (onesimus.command_name) = ".volstatus";
+  option (onesimus.help_text) = "List all volume status";
+  option (onesimus.allowed_in_runscript) = true;
 }
 
 message DotBvfsLsdirsCommand {
-  option (bareos.command_name) = ".bvfs_lsdirs";
-  option (bareos.help_text) = "List directories using BVFS";
-  option (bareos.usage) = ".bvfs_lsdirs jobid=<jobid> path=<path> | pathid=<pathid> "
+  option (onesimus.command_name) = ".bvfs_lsdirs";
+  option (onesimus.help_text) = "List directories using BVFS";
+  option (onesimus.usage) = ".bvfs_lsdirs jobid=<jobid> path=<path> | pathid=<pathid> "
                           "[limit=<limit>] [offset=<offset>]";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 
   int32 jobid = 1;
   string path = 2;
@@ -603,12 +603,12 @@ message DotBvfsLsdirsCommand {
 }
 
 message DotBvfsLsfilesCommand {
-  option (bareos.command_name) = ".bvfs_lsfiles";
-  option (bareos.help_text) = "List files using BVFS";
-  option (bareos.usage) = ".bvfs_lsfiles jobid=<jobid> path=<path> | pathid=<pathid> "
+  option (onesimus.command_name) = ".bvfs_lsfiles";
+  option (onesimus.help_text) = "List files using BVFS";
+  option (onesimus.usage) = ".bvfs_lsfiles jobid=<jobid> path=<path> | pathid=<pathid> "
                           "[limit=<limit>] [offset=<offset>]";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 
   int32 jobid = 1;
   string path = 2;
@@ -618,33 +618,33 @@ message DotBvfsLsfilesCommand {
 }
 
 message DotBvfsUpdateCommand {
-  option (bareos.command_name) = ".bvfs_update";
-  option (bareos.help_text) = "Update BVFS cache";
-  option (bareos.usage) = ".bvfs_update [jobid=<jobid>]";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = ".bvfs_update";
+  option (onesimus.help_text) = "Update BVFS cache";
+  option (onesimus.usage) = ".bvfs_update [jobid=<jobid>]";
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 
   int32 jobid = 1;
 }
 
 message DotBvfsGetJobidsCommand {
-  option (bareos.command_name) = ".bvfs_get_jobids";
-  option (bareos.help_text) = "Get jobids required for a restore";
-  option (bareos.usage) = ".bvfs_get_jobids jobid=<jobid> | ujobid=<unique-jobid> [all]";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = ".bvfs_get_jobids";
+  option (onesimus.help_text) = "Get jobids required for a restore";
+  option (onesimus.usage) = ".bvfs_get_jobids jobid=<jobid> | ujobid=<unique-jobid> [all]";
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 
   int32 jobid = 1;
   string ujobid = 2;
 }
 
 message DotBvfsVersionsCommand {
-  option (bareos.command_name) = ".bvfs_versions";
-  option (bareos.help_text) = "List versions of a file";
-  option (bareos.usage) = ".bvfs_versions jobid=0 client=<client-name> pathid=<path-id> "
+  option (onesimus.command_name) = ".bvfs_versions";
+  option (onesimus.help_text) = "List versions of a file";
+  option (onesimus.usage) = ".bvfs_versions jobid=0 client=<client-name> pathid=<path-id> "
                           "filename=<file-name> [copies] [versions]";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 
   string client = 1;
   string pathid = 2;
@@ -652,12 +652,12 @@ message DotBvfsVersionsCommand {
 }
 
 message DotBvfsRestoreCommand {
-  option (bareos.command_name) = ".bvfs_restore";
-  option (bareos.help_text) = "Mark BVFS files/directories for restore. Stored in handle.";
-  option (bareos.usage) = ".bvfs_restore path=<handle> jobid=<jobid> [fileid=<file-id>] "
+  option (onesimus.command_name) = ".bvfs_restore";
+  option (onesimus.help_text) = "Mark BVFS files/directories for restore. Stored in handle.";
+  option (onesimus.usage) = ".bvfs_restore path=<handle> jobid=<jobid> [fileid=<file-id>] "
                           "[dirid=<dirid>] [hardlink=<hardlink>]";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 
   string path = 1;
   int32 jobid = 2;
@@ -667,27 +667,27 @@ message DotBvfsRestoreCommand {
 }
 
 message DotBvfsCleanupCommand {
-  option (bareos.command_name) = ".bvfs_cleanup";
-  option (bareos.help_text) = "Cleanup BVFS cache for a certain handle";
-  option (bareos.usage) = ".bvfs_cleanup path=<handle>";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = ".bvfs_cleanup";
+  option (onesimus.help_text) = "Cleanup BVFS cache for a certain handle";
+  option (onesimus.usage) = ".bvfs_cleanup path=<handle>";
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 
   string path = 1;
 }
 
 message DotBvfsClearCacheCommand {
-  option (bareos.command_name) = ".bvfs_clear_cache";
-  option (bareos.help_text) = "Clear BVFS cache";
-  option (bareos.usage) = ".bvfs_clear_cache yes";
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = ".bvfs_clear_cache";
+  option (onesimus.help_text) = "Clear BVFS cache";
+  option (onesimus.usage) = ".bvfs_clear_cache yes";
+  option (onesimus.audit_event) = true;
 }
 
 message AddCommand {
-  option (bareos.command_name) = "add";
-  option (bareos.help_text) = "Add media to a pool";
-  option (bareos.usage) = "add pool=<pool-name> storage=<storage-name> jobid=<jobid>";
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = "add";
+  option (onesimus.help_text) = "Add media to a pool";
+  option (onesimus.usage) = "add pool=<pool-name> storage=<storage-name> jobid=<jobid>";
+  option (onesimus.audit_event) = true;
 
   string pool = 1;
   string storage = 2;
@@ -695,36 +695,36 @@ message AddCommand {
 }
 
 message AutodisplayCommand {
-  option (bareos.command_name) = "autodisplay";
-  option (bareos.help_text) = "Autodisplay console messages";
-  option (bareos.usage) = "autodisplay on | off";
+  option (onesimus.command_name) = "autodisplay";
+  option (onesimus.help_text) = "Autodisplay console messages";
+  option (onesimus.usage) = "autodisplay on | off";
 }
 
 message AutomountCommand {
-  option (bareos.command_name) = "automount";
-  option (bareos.help_text) = "Automount after label";
-  option (bareos.usage) = "automount on | off";
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = "automount";
+  option (onesimus.help_text) = "Automount after label";
+  option (onesimus.usage) = "automount on | off";
+  option (onesimus.audit_event) = true;
 }
 
 message CreateCommand {
-  option (bareos.command_name) = "create";
-  option (bareos.help_text) = "Create DB Pool from resource";
-  option (bareos.usage) = "create pool=<pool-name>";
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = "create";
+  option (onesimus.help_text) = "Create DB Pool from resource";
+  option (onesimus.usage) = "create pool=<pool-name>";
+  option (onesimus.audit_event) = true;
 
   string pool = 1;
 }
 
 message DeleteCommand {
-  option (bareos.command_name) = "delete";
-  option (bareos.help_text) = "Delete volume, pool or job";
-  option (bareos.usage) = "delete [volume=<vol-name> [yes] | volume pool=<pool-name> "
+  option (onesimus.command_name) = "delete";
+  option (onesimus.help_text) = "Delete volume, pool or job";
+  option (onesimus.usage) = "delete [volume=<vol-name> [yes] | volume pool=<pool-name> "
                           "[yes] | storage storage=<storage-name> | pool=<pool-name> | "
                           "jobid=<jobid> | jobid=<jobid1,jobid2,...> | "
                           "jobid=<jobid1-jobid9>]";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 
   string volume = 1;
   string pool = 2;
@@ -733,11 +733,11 @@ message DeleteCommand {
 }
 
 message DisableCommand {
-  option (bareos.command_name) = "disable";
-  option (bareos.help_text) = "Disable a job/client/schedule";
-  option (bareos.usage) = "disable job=<job-name> client=<client-name> schedule=<schedule-name>";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = "disable";
+  option (onesimus.help_text) = "Disable a job/client/schedule";
+  option (onesimus.usage) = "disable job=<job-name> client=<client-name> schedule=<schedule-name>";
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 
   string job = 1;
   string client = 2;
@@ -745,11 +745,11 @@ message DisableCommand {
 }
 
 message EnableCommand {
-  option (bareos.command_name) = "enable";
-  option (bareos.help_text) = "Enable a job/client/schedule";
-  option (bareos.usage) = "enable job=<job-name> client=<client-name> schedule=<schedule-name>";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = "enable";
+  option (onesimus.help_text) = "Enable a job/client/schedule";
+  option (onesimus.usage) = "enable job=<job-name> client=<client-name> schedule=<schedule-name>";
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 
   string job = 1;
   string client = 2;
@@ -757,12 +757,12 @@ message EnableCommand {
 }
 
 message EstimateCommand {
-  option (bareos.command_name) = "estimate";
-  option (bareos.help_text) = "Performs FileSet estimate, listing gives full listing";
-  option (bareos.usage) = "estimate fileset=<fileset-name> client=<client-name> "
+  option (onesimus.command_name) = "estimate";
+  option (onesimus.help_text) = "Performs FileSet estimate, listing gives full listing";
+  option (onesimus.usage) = "estimate fileset=<fileset-name> client=<client-name> "
                           "level=<level> accurate=<yes/no> job=<job-name> listing";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 
   string fileset = 1;
   string client = 2;
@@ -772,17 +772,17 @@ message EstimateCommand {
 }
 
 message ExitCommand {
-  option (bareos.command_name) = "exit";
-  option (bareos.help_text) = "Terminate Bconsole session";
+  option (onesimus.command_name) = "exit";
+  option (onesimus.help_text) = "Terminate Bconsole session";
 }
 
 message ExportCommand {
-  option (bareos.command_name) = "export";
-  option (bareos.help_text) = "Export volumes from normal slots to import/export slots";
-  option (bareos.usage) = "export storage=<storage-name> srcslots=<slot-selection> [ "
+  option (onesimus.command_name) = "export";
+  option (onesimus.help_text) = "Export volumes from normal slots to import/export slots";
+  option (onesimus.usage) = "export storage=<storage-name> srcslots=<slot-selection> [ "
                           "dstslots=<slot-selection> volume=<volume-name> scan ]";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 
   string storage = 1;
   string srcslots = 2;
@@ -791,15 +791,15 @@ message ExportCommand {
 }
 
 message GuiCommand {
-  option (bareos.command_name) = "gui";
-  option (bareos.help_text) = "Switch between interactive (gui off) and non-interactive (gui on) mode";
-  option (bareos.usage) = "gui on | off";
+  option (onesimus.command_name) = "gui";
+  option (onesimus.help_text) = "Switch between interactive (gui off) and non-interactive (gui on) mode";
+  option (onesimus.usage) = "gui on | off";
 }
 
 message HelpCommand {
-  option (bareos.command_name) = "help";
-  option (bareos.help_text) = "Print help on specific command";
-  option (bareos.usage) = "help add autodisplay automount cancel configure create "
+  option (onesimus.command_name) = "help";
+  option (onesimus.help_text) = "Print help on specific command";
+  option (onesimus.usage) = "help add autodisplay automount cancel configure create "
                           "delete disable enable estimate exit gui label list llist "
                           "messages memory mount prune purge quit query restore relabel "
                           "release reload run status setbandwidth setdebug setip show "
@@ -808,12 +808,12 @@ message HelpCommand {
 }
 
 message ImportCommand {
-  option (bareos.command_name) = "import";
-  option (bareos.help_text) = "Import volumes from import/export slots to normal slots";
-  option (bareos.usage) = "import storage=<storage-name> [ srcslots=<slot-selection> "
+  option (onesimus.command_name) = "import";
+  option (onesimus.help_text) = "Import volumes from import/export slots to normal slots";
+  option (onesimus.usage) = "import storage=<storage-name> [ srcslots=<slot-selection> "
                           "dstslots=<slot-selection> volume=<volume-name> scan ]";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 
   string storage = 1;
   string srcslots = 2;
@@ -822,12 +822,12 @@ message ImportCommand {
 }
 
 message LabelCommand {
-  option (bareos.command_name) = "label";
-  option (bareos.help_text) = "Label a tape";
-  option (bareos.usage) = "label storage=<storage-name> volume=<volume-name> "
+  option (onesimus.command_name) = "label";
+  option (onesimus.help_text) = "Label a tape";
+  option (onesimus.usage) = "label storage=<storage-name> volume=<volume-name> "
                           "pool=<pool-name> slot=<slot> [ drive = <drivenum>] [ "
                           "barcodes ] [ encrypt ] [ yes ]";
-  option (bareos.audit_event) = true;
+  option (onesimus.audit_event) = true;
 
   string storage = 1;
   string volume = 2;
@@ -836,29 +836,29 @@ message LabelCommand {
 }
 
 message LlistCommand {
-  option (bareos.command_name) = "llist";
-  option (bareos.help_text) = "Full or long list like list command";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = "llist";
+  option (onesimus.help_text) = "Full or long list like list command";
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 }
 
 message MessagesCommand {
-  option (bareos.command_name) = "messages";
-  option (bareos.help_text) = "Display pending messages";
+  option (onesimus.command_name) = "messages";
+  option (onesimus.help_text) = "Display pending messages";
 }
 
 message MemoryCommand {
-  option (bareos.command_name) = "memory";
-  option (bareos.help_text) = "Print current memory usage";
-  option (bareos.allowed_in_runscript) = true;
+  option (onesimus.command_name) = "memory";
+  option (onesimus.help_text) = "Print current memory usage";
+  option (onesimus.allowed_in_runscript) = true;
 }
 
 message MountCommand {
-  option (bareos.command_name) = "mount";
-  option (bareos.help_text) = "Mount storage";
-  option (bareos.usage) = "mount storage=<storage-name> slot=<num> drive=<drivenum> "
+  option (onesimus.command_name) = "mount";
+  option (onesimus.help_text) = "Mount storage";
+  option (onesimus.usage) = "mount storage=<storage-name> slot=<num> drive=<drivenum> "
                           "jobid=<jobid> | job=<job-name> | ujobid=<complete_name>";
-  option (bareos.audit_event) = true;
+  option (onesimus.audit_event) = true;
 
   string storage = 1;
   int32 slot = 2;
@@ -869,12 +869,12 @@ message MountCommand {
 }
 
 message MoveCommand {
-  option (bareos.command_name) = "move";
-  option (bareos.help_text) = "Move slots in an autochanger";
-  option (bareos.usage) = "move storage=<storage-name> srcslots=<slot-selection> "
+  option (onesimus.command_name) = "move";
+  option (onesimus.help_text) = "Move slots in an autochanger";
+  option (onesimus.usage) = "move storage=<storage-name> srcslots=<slot-selection> "
                           "dstslots=<slot-selection>";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 
   string storage = 1;
   string srcslots = 2;
@@ -882,30 +882,30 @@ message MoveCommand {
 }
 
 message PruneCommand {
-  option (bareos.command_name) = "prune";
-  option (bareos.help_text) = "Prune records from catalog";
-  option (bareos.usage) = "prune files [client=<client>] [pool=<pool>] [yes] | jobs "
+  option (onesimus.command_name) = "prune";
+  option (onesimus.help_text) = "Prune records from catalog";
+  option (onesimus.usage) = "prune files [client=<client>] [pool=<pool>] [yes] | jobs "
                           "[client=<client>] [pool=<pool>] [yes] | volume [all] "
                           "[=volume] [pool=<pool>] [yes] | stats [yes] | directory "
                           "[=directory] [client=<client>] [recursive] [yes]";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 
   string client = 1;
   string pool = 2;
 }
 
 message PurgeCommand {
-  option (bareos.command_name) = "purge";
-  option (bareos.help_text) = "Purge records from catalog";
-  option (bareos.usage) = "purge [files [job=<job> | jobid=<jobid> | client=<client> | "
+  option (onesimus.command_name) = "purge";
+  option (onesimus.help_text) = "Purge records from catalog";
+  option (onesimus.usage) = "purge [files [job=<job> | jobid=<jobid> | client=<client> | "
                           "volume=<volume>]] | [jobs [client=<client> | "
                           "volume=<volume>] | pool=<pool>] [jobstatus=<status>]] | "
                           "[volume[=<volume>] [storage=<storage>] [pool=<pool> | "
                           "allpools] [devicetype=<type>] [drive=<drivenum>] "
                           "[action=<action>]] | [quota [client=<client>]]";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 
   string job = 1;
   int32 jobid = 2;
@@ -920,20 +920,20 @@ message PurgeCommand {
 }
 
 message QuitCommand {
-  option (bareos.command_name) = "quit";
-  option (bareos.help_text) = "Terminate Bconsole session";
+  option (onesimus.command_name) = "quit";
+  option (onesimus.help_text) = "Terminate Bconsole session";
 }
 
 message QueryCommand {
-  option (bareos.command_name) = "query";
-  option (bareos.help_text) = "Query catalog";
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = "query";
+  option (onesimus.help_text) = "Query catalog";
+  option (onesimus.audit_event) = true;
 }
 
 message RestoreCommand {
-  option (bareos.command_name) = "restore";
-  option (bareos.help_text) = "Restore files";
-  option (bareos.usage) = "restore where=</path> client=<client-name> "
+  option (onesimus.command_name) = "restore";
+  option (onesimus.help_text) = "Restore files";
+  option (onesimus.usage) = "restore where=</path> client=<client-name> "
                           "storage=<storage-name> bootstrap=<file> restorejob=<job-name"
                           "> comment=<text> jobid=<jobid> fileset=<fileset-name> "
                           "replace=<always|never|ifolder|ifnewer> pluginoptions=<plugin"
@@ -943,7 +943,7 @@ message RestoreCommand {
                           "before=<date> strip_prefix=<prefix> add_prefix=<prefix> "
                           "add_suffix=<suffix> select=<date> select before current "
                           "copies done all";
-  option (bareos.audit_event) = true;
+  option (onesimus.audit_event) = true;
 
   string where = 1;
   string client = 2;
@@ -970,11 +970,11 @@ message RestoreCommand {
 }
 
 message RelabelCommand {
-  option (bareos.command_name) = "relabel";
-  option (bareos.help_text) = "Relabel a tape";
-  option (bareos.usage) = "relabel storage=<storage-name> oldvolume=<old-volume-name>  "
+  option (onesimus.command_name) = "relabel";
+  option (onesimus.help_text) = "Relabel a tape";
+  option (onesimus.usage) = "relabel storage=<storage-name> oldvolume=<old-volume-name>  "
                           "volume=<new-volume-name> pool=<pool-name> [ encrypt ]";
-  option (bareos.audit_event) = true;
+  option (onesimus.audit_event) = true;
 
   string storage = 1;
   string oldvolume = 2;
@@ -983,30 +983,30 @@ message RelabelCommand {
 }
 
 message ReleaseCommand {
-  option (bareos.command_name) = "release";
-  option (bareos.help_text) = "Release storage";
-  option (bareos.usage) = "release storage=<storage-name> [ drive=<drivenum> ] [ alldrives ]";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = "release";
+  option (onesimus.help_text) = "Release storage";
+  option (onesimus.usage) = "release storage=<storage-name> [ drive=<drivenum> ] [ alldrives ]";
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 
   string storage = 1;
   int32 drive = 2;
 }
 
 message ReloadCommand {
-  option (bareos.command_name) = "reload";
-  option (bareos.help_text) = "Reload conf file";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = "reload";
+  option (onesimus.help_text) = "Reload conf file";
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 }
 
 message RerunCommand {
-  option (bareos.command_name) = "rerun";
-  option (bareos.help_text) = "Rerun a job";
-  option (bareos.usage) = "rerun jobid=<jobid> | since_jobid=<jobid> [ "
+  option (onesimus.command_name) = "rerun";
+  option (onesimus.help_text) = "Rerun a job";
+  option (onesimus.usage) = "rerun jobid=<jobid> | since_jobid=<jobid> [ "
                           "until_jobid=<jobid> ] | days=<nr_days> | hours=<nr_hours> | "
                           "yes";
-  option (bareos.audit_event) = true;
+  option (onesimus.audit_event) = true;
 
   int32 jobid = 1;
   int32 since_jobid = 2;
@@ -1016,23 +1016,23 @@ message RerunCommand {
 }
 
 message ResolveCommand {
-  option (bareos.command_name) = "resolve";
-  option (bareos.help_text) = "Resolve a hostname";
-  option (bareos.usage) = "resolve client=<client-name> | storage=<storage-name> <host-name>";
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = "resolve";
+  option (onesimus.help_text) = "Resolve a hostname";
+  option (onesimus.usage) = "resolve client=<client-name> | storage=<storage-name> <host-name>";
+  option (onesimus.audit_event) = true;
 
   string client = 1;
   string storage = 2;
 }
 
 message SetbandwidthCommand {
-  option (bareos.command_name) = "setbandwidth";
-  option (bareos.help_text) = "Sets bandwidth";
-  option (bareos.usage) = "setbandwidth [ client=<client-name> | storage=<storage-name> "
+  option (onesimus.command_name) = "setbandwidth";
+  option (onesimus.help_text) = "Sets bandwidth";
+  option (onesimus.usage) = "setbandwidth [ client=<client-name> | storage=<storage-name> "
                           "| jobid=<jobid> | job=<job-name> | ujobid=<unique-jobid> "
                           "state=<job_state> | all ] limit=<nn-kbs> [ yes ]";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 
   string client = 1;
   string storage = 2;
@@ -1044,12 +1044,12 @@ message SetbandwidthCommand {
 }
 
 message SetdebugCommand {
-  option (bareos.command_name) = "setdebug";
-  option (bareos.help_text) = "Sets debug level";
-  option (bareos.usage) = "setdebug level=<nn> trace=0/1 timestamp=0/1 "
+  option (onesimus.command_name) = "setdebug";
+  option (onesimus.help_text) = "Sets debug level";
+  option (onesimus.usage) = "setdebug level=<nn> trace=0/1 timestamp=0/1 "
                           "client=<client-name> | dir | storage=<storage-name> | all";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 
   int32 level = 1;
   string client = 2;
@@ -1057,12 +1057,12 @@ message SetdebugCommand {
 }
 
 message SetdeviceCommand {
-  option (bareos.command_name) = "setdevice";
-  option (bareos.help_text) = "Sets device parameter";
-  option (bareos.usage) = "setdevice storage=<storage-name> device=<device-name> "
+  option (onesimus.command_name) = "setdevice";
+  option (onesimus.help_text) = "Sets device parameter";
+  option (onesimus.usage) = "setdevice storage=<storage-name> device=<device-name> "
                           "autoselect=<bool>";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 
   string storage = 1;
   string device = 2;
@@ -1070,15 +1070,15 @@ message SetdeviceCommand {
 }
 
 message SetipCommand {
-  option (bareos.command_name) = "setip";
-  option (bareos.help_text) = "Sets new client address -- if authorized";
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = "setip";
+  option (onesimus.help_text) = "Sets new client address -- if authorized";
+  option (onesimus.audit_event) = true;
 }
 
 message ShowCommand {
-  option (bareos.command_name) = "show";
-  option (bareos.help_text) = "Show resource records";
-  option (bareos.usage) = "show catalog=<catalog-name> | client=<client-name> | "
+  option (onesimus.command_name) = "show";
+  option (onesimus.help_text) = "Show resource records";
+  option (onesimus.usage) = "show catalog=<catalog-name> | client=<client-name> | "
                           "console=<console-name> | director=<director-name> | "
                           "fileset=<fileset-name> | jobdefs=<job-defaults> | "
                           "job=<job-name> | message=<message-resource-name> | "
@@ -1087,8 +1087,8 @@ message ShowCommand {
                           " clients | consoles | directors | filesets | jobdefs | jobs |"
                           " messages | pools | profiles | schedules | storages | "
                           "disabled [ clients | jobs | schedules ] | all [verbose]";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 
   string catalog = 1;
   string client = 2;
@@ -1105,26 +1105,26 @@ message ShowCommand {
 }
 
 message TimeCommand {
-  option (bareos.command_name) = "time";
-  option (bareos.help_text) = "Print current time";
-  option (bareos.allowed_in_runscript) = true;
+  option (onesimus.command_name) = "time";
+  option (onesimus.help_text) = "Print current time";
+  option (onesimus.allowed_in_runscript) = true;
 }
 
 message TraceCommand {
-  option (bareos.command_name) = "trace";
-  option (bareos.help_text) = "Turn on/off trace to file";
-  option (bareos.usage) = "trace on | off";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = "trace";
+  option (onesimus.help_text) = "Turn on/off trace to file";
+  option (onesimus.usage) = "trace on | off";
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 }
 
 message TruncateCommand {
-  option (bareos.command_name) = "truncate";
-  option (bareos.help_text) = "Truncate purged volumes";
-  option (bareos.usage) = "truncate volstatus=Purged [storage=<storage>] [pool=<pool>] "
+  option (onesimus.command_name) = "truncate";
+  option (onesimus.help_text) = "Truncate purged volumes";
+  option (onesimus.usage) = "truncate volstatus=Purged [storage=<storage>] [pool=<pool>] "
                           "[volume=<volume>] [drive=<drivenum>] [yes]";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 
   string storage = 1;
   string pool = 2;
@@ -1133,11 +1133,11 @@ message TruncateCommand {
 }
 
 message UnmountCommand {
-  option (bareos.command_name) = "unmount";
-  option (bareos.help_text) = "Unmount storage";
-  option (bareos.usage) = "unmount storage=<storage-name> [ drive=<drivenum> ] "
+  option (onesimus.command_name) = "unmount";
+  option (onesimus.help_text) = "Unmount storage";
+  option (onesimus.usage) = "unmount storage=<storage-name> [ drive=<drivenum> ] "
                           "jobid=<jobid> | job=<job-name> | ujobid=<complete_name>";
-  option (bareos.audit_event) = true;
+  option (onesimus.audit_event) = true;
 
   string storage = 1;
   int32 drive = 2;
@@ -1147,11 +1147,11 @@ message UnmountCommand {
 }
 
 message UmountCommand {
-  option (bareos.command_name) = "umount";
-  option (bareos.help_text) = "Umount - for old-time Unix guys, see unmount";
-  option (bareos.usage) = "umount storage=<storage-name> [ drive=<drivenum> ] "
+  option (onesimus.command_name) = "umount";
+  option (onesimus.help_text) = "Umount - for old-time Unix guys, see unmount";
+  option (onesimus.usage) = "umount storage=<storage-name> [ drive=<drivenum> ] "
                           "jobid=<jobid> | job=<job-name> | ujobid=<complete_name>";
-  option (bareos.audit_event) = true;
+  option (onesimus.audit_event) = true;
 
   string storage = 1;
   int32 drive = 2;
@@ -1161,9 +1161,9 @@ message UmountCommand {
 }
 
 message UpdateCommand {
-  option (bareos.command_name) = "update";
-  option (bareos.help_text) = "Update volume, pool, slots, job or statistics";
-  option (bareos.usage) = "update [volume=<volume-name> [volstatus=<status>] "
+  option (onesimus.command_name) = "update";
+  option (onesimus.help_text) = "Update volume, pool, slots, job or statistics";
+  option (onesimus.usage) = "update [volume=<volume-name> [volstatus=<status>] "
                           "[volretention=<time-def>] actiononpurge=<action>] "
                           "[pool=<pool-name>] [recycle=<yes/no>] [slot=<number>] "
                           "[inchanger=<yes/no>]] | [pool=<pool-name> "
@@ -1174,8 +1174,8 @@ message UpdateCommand {
                           "[starttime=<time-def>] [client=<client-name>] "
                           "[filesetid=<fileset-id>] [jobtype=<job-type>]] | [stats "
                           "[days=<number>]]";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 
   string volume = 1;
   string volstatus = 2;
@@ -1201,24 +1201,24 @@ message UpdateCommand {
 }
 
 message UseCommand {
-  option (bareos.command_name) = "use";
-  option (bareos.help_text) = "Use specific catalog";
-  option (bareos.usage) = "use catalog=<catalog>";
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = "use";
+  option (onesimus.help_text) = "Use specific catalog";
+  option (onesimus.usage) = "use catalog=<catalog>";
+  option (onesimus.audit_event) = true;
 
   string catalog = 1;
 }
 
 message VarCommand {
-  option (bareos.command_name) = "var";
-  option (bareos.help_text) = "Does variable expansion";
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = "var";
+  option (onesimus.help_text) = "Does variable expansion";
+  option (onesimus.audit_event) = true;
 }
 
 message WaitCommand {
-  option (bareos.command_name) = "wait";
-  option (bareos.help_text) = "Wait until no jobs are running";
-  option (bareos.usage) = "wait jobname=<name> | jobid=<jobid> | ujobid=<complete_name> "
+  option (onesimus.command_name) = "wait";
+  option (onesimus.help_text) = "Wait until no jobs are running";
+  option (onesimus.usage) = "wait jobname=<name> | jobid=<jobid> | ujobid=<complete_name> "
                           "| mount [timeout=<number>]";
 
   string jobname = 1;
@@ -1228,7 +1228,7 @@ message WaitCommand {
 }
 
 message WhoamiCommand {
-  option (bareos.command_name) = "whoami";
-  option (bareos.help_text) = "Print the user name associated with this console";
-  option (bareos.allowed_in_runscript) = true;
+  option (onesimus.command_name) = "whoami";
+  option (onesimus.help_text) = "Print the user name associated with this console";
+  option (onesimus.allowed_in_runscript) = true;
 }

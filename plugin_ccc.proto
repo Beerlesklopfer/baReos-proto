@@ -7,11 +7,12 @@
 //
 // Faktorisiert daemon-uebergreifende Typen heraus, die von allen drei
 // Plugin-Typen (Filed, Stored, Director) gemeinsam genutzt werden.
-// Bestehende Filed-Protos (plugin.proto, bareos.proto) koennen spaeter
+// Bestehende Filed-Protos (plugin.proto und das Filed-Plugin-Proto des
+// Bareos-gRPC-Plugins, Bareos-Kompatibilitaet) koennen spaeter
 // auf import "plugin_ccc.proto" umgestellt werden.
 
 syntax = "proto3";
-package bareos.ccc;
+package onesimus.ccc;
 
 // ============================================================================
 // Universelle Return-Codes (identisch fuer alle Plugin-Typen)
@@ -26,7 +27,7 @@ enum ReturnCode {
   RC_More = 4;      // Weitere Elemente vorhanden
   RC_Term = 5;      // Plugin entladen
   RC_Seen = 6;      // Datei bereits gesehen (checkFile)
-  RC_Core = 7;      // Bareos-Core soll uebernehmen
+  RC_Core = 7;      // Daemon-Core soll uebernehmen (bRC_Core)
   RC_Skip = 8;      // Element ueberspringen
   RC_Cancel = 9;    // Job abgebrochen
 }
@@ -174,7 +175,7 @@ enum CommonStringVariable {
   CSV_ClientName = 2;
   CSV_JobName = 3;
   CSV_WorkingDir = 4;
-  CSV_BareosVersion = 5;
+  CSV_OnesimusVersion = 5;  // Versionsstring des Daemons
   CSV_PluginPath = 6;
 }
 

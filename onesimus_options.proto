@@ -8,7 +8,7 @@
 // ausgewertet, um die Command-Registry und Validators zu erzeugen.
 
 syntax = "proto3";
-package bareos;
+package onesimus;
 
 import "google/protobuf/descriptor.proto";
 

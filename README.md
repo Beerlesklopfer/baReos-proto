@@ -1,18 +1,25 @@
-# baReos-proto
+# onesimus-proto
 
-Protocol Buffer definitions for the Bareos Director gRPC interface.
+Protocol Buffer definitions for the Onesimus Director gRPC interface: the
+contract between the Onesimus Director (`onesimus-dird`), the Onesimus
+console (`oconsole`, including its MCP server) and the Onesimus GUI.
 
-Shared between the C++ Bareos Director and the Rust baReos Director (`baReos-dird`).
+The gRPC interface complements the classic console protocol: the Onesimus
+Director stays wire-compatible with the Bareos console protocol (bconsole,
+Bareos WebUI), while this repository defines the Onesimus gRPC API.
+
+Protobuf packages: `onesimus` (custom options), `onesimus.director`,
+`onesimus.director.commands`, `onesimus.director.api`, `onesimus.ccc`.
 
 ## Files
 
 | File | Description |
 |------|-------------|
-| `director_service.proto` | Director gRPC service (GetServerInfo, Login, ExecuteCommand, ListCommands, InteractiveSession) |
-| `director_api.proto` | Typed Director API (`bareos.director.api.DirectorApi`): one RPC per command/subcommand with structured results |
-| `director_commands.proto` | 88 command definitions with parameter schemas |
-| `bareos_options.proto` | Custom protobuf options for command metadata |
-| `plugin_ccc.proto` | Cross-cutting plugin interfaces (shared by FD/SD/DIR) |
+| `director_service.proto` | Director gRPC service `onesimus.director.Director` (GetServerInfo, Login, ExecuteCommand, ListCommands, InteractiveSession) |
+| `director_api.proto` | Typed Director API (`onesimus.director.api.DirectorApi`): one RPC per command/subcommand with structured results |
+| `director_commands.proto` | 88 command definitions with parameter schemas (`onesimus.director.commands`) |
+| `onesimus_options.proto` | Custom protobuf options for command metadata (`(onesimus.command_name)`, `(onesimus.help_text)`, `(onesimus.usage)`, `(onesimus.bare_flag)`, …) |
+| `plugin_ccc.proto` | Cross-cutting plugin interfaces shared by FD/SD/DIR (`onesimus.ccc`) |
 
 ## Typed Director API (`director_api.proto`)
 
@@ -21,7 +28,7 @@ login (session token in the metadata header `x-onesimus-session`) and the
 same console ACLs. Requests are the `*Command` messages of
 `director_commands.proto` where they carry all parameters of a command form,
 otherwise new `*Command` messages in `director_api.proto` (with the
-`bareos_options.proto` options). Responses are `*Response` messages built
+`onesimus_options.proto` options). Responses are `*Response` messages built
 from `*Info` records whose field names are the keys of the Director's
 API 2 JSON output (`.api 2`); values without a typed field are kept in
 `extra_fields`.
@@ -43,14 +50,23 @@ API 2 JSON output (`.api 2`); values without a typed field are kept in
 - Imports `google/protobuf/struct.proto` (well-known types, e.g. Debian
   package `libprotobuf-dev`).
 
-Documentation (German): `docs/wiki/grpc-api.md` in baReos-dird.
+Example (grpcurl, after `Login`):
+
+```bash
+grpcurl -insecure -import-path proto -proto director_api.proto \
+  -H "x-onesimus-session: $TOKEN" localhost:10101 \
+  onesimus.director.api.DirectorApi/GetVersion
+```
+
+Documentation (German): `docs/wiki/grpc-api.md` in the Onesimus Director
+repository.
 
 ## Usage
 
 ### As Git submodule
 
 ```bash
-git submodule add git@github.com:Beerlesklopfer/baReos-proto.git proto
+git submodule add git@github.com:Beerlesklopfer/onesimus-proto.git proto
 ```
 
 ### In Rust (tonic-build)
@@ -74,18 +90,31 @@ tonic_build::configure()
     .generate_default_stubs(true)
     .compile_protos(&["proto/director_api.proto"], &["proto/"])
     .unwrap();
+
+// generated modules: onesimus::director, onesimus::director::api, ...
 ```
 
 ### In C++ (CMake)
 
 ```cmake
-BareosProtobuf(director_service.proto)
-BareosProtobuf(director_api.proto)
+find_package(Protobuf REQUIRED)
+find_package(gRPC CONFIG REQUIRED)
+add_library(onesimus_proto
+  director_service.proto director_commands.proto
+  director_api.proto onesimus_options.proto)
+protobuf_generate(TARGET onesimus_proto LANGUAGE cpp)
+protobuf_generate(TARGET onesimus_proto LANGUAGE grpc
+  GENERATE_EXTENSIONS .grpc.pb.h .grpc.pb.cc
+  PLUGIN "protoc-gen-grpc=$<TARGET_FILE:gRPC::grpc_cpp_plugin>")
 ```
+
+Generated C++ namespaces follow the packages (`onesimus::director`,
+`onesimus::director::api`, …); the options file generates
+`onesimus_options.pb.h`.
 
 ## License
 
 GNU Affero General Public License v3.0 only (`AGPL-3.0-only`); see [LICENSE](LICENSE).
-Existing Bareos copyright notices are preserved.
+Parts derived from Bareos keep their original copyright notices.
 
-Maintainer: Joerg Bernau <Joerg.Bernau@onesimus.io>.
+Maintainer: Jörg Bernau <Joerg.Bernau@onesimus.io>.

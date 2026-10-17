@@ -6,7 +6,7 @@
 // gRPC Director Service Definition.
 
 syntax = "proto3";
-package bareos.director;
+package onesimus.director;
 
 // ==========================================================================
 // Director gRPC Service

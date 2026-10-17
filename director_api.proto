@@ -12,7 +12,7 @@
 //
 // Konventionen dieser Datei:
 //   - Requests sind *Command-Messages mit den Optionen aus
-//     bareos_options.proto (command_name, help_text, usage ...). Wo eine
+//     onesimus_options.proto (command_name, help_text, usage ...). Wo eine
 //     Message aus director_commands.proto alle Parameter einer Unterform
 //     enthaelt, wird sie wiederverwendet; neue Requests nur, wo keine passt.
 //     command_name enthaelt das Unterkommando ("list jobs"), wie bei
@@ -45,9 +45,9 @@
 // noch nicht implementiert (Schreib-RPCs, S-35) -> UNIMPLEMENTED.
 
 syntax = "proto3";
-package bareos.director.api;
+package onesimus.director.api;
 
-import "bareos_options.proto";
+import "onesimus_options.proto";
 import "director_commands.proto";
 import "google/protobuf/struct.proto";
 
@@ -61,29 +61,29 @@ service DirectorApi {
   // ------------------------------------------------------------------------
 
   // version
-  rpc GetVersion (bareos.director.commands.VersionCommand) returns (VersionResponse);
+  rpc GetVersion (onesimus.director.commands.VersionCommand) returns (VersionResponse);
   // time
-  rpc GetTime (bareos.director.commands.TimeCommand) returns (TimeResponse);
+  rpc GetTime (onesimus.director.commands.TimeCommand) returns (TimeResponse);
   // whoami
-  rpc Whoami (bareos.director.commands.WhoamiCommand) returns (WhoamiResponse);
+  rpc Whoami (onesimus.director.commands.WhoamiCommand) returns (WhoamiResponse);
   // memory
-  rpc GetMemory (bareos.director.commands.MemoryCommand) returns (MemoryResponse);
+  rpc GetMemory (onesimus.director.commands.MemoryCommand) returns (MemoryResponse);
   // . (no op)
-  rpc Noop (bareos.director.commands.DotCommand) returns (NoopResponse);
+  rpc Noop (onesimus.director.commands.DotCommand) returns (NoopResponse);
   // help [<command>]
   rpc Help (HelpTopicCommand) returns (HelpResponse);
   // .help [all] [item=<command>] [full]
   rpc DotHelp (DotHelpTopicCommand) returns (HelpResponse);
   // messages (holt die wartenden Meldungen der Konsole ab)
-  rpc GetMessages (bareos.director.commands.MessagesCommand) returns (MessagesResponse);
+  rpc GetMessages (onesimus.director.commands.MessagesCommand) returns (MessagesResponse);
   // .messages
-  rpc DotMessages (bareos.director.commands.DotMessagesCommand) returns (MessagesResponse);
+  rpc DotMessages (onesimus.director.commands.DotMessagesCommand) returns (MessagesResponse);
   // var <text>
   rpc ExpandVariables (VarExpandCommand) returns (TextResponse);
   // resolve [client=<name> | storage=<name>] <hostname>
   rpc Resolve (ResolveHostCommand) returns (TextResponse);
   // estimate job=<name> ... (fragt den File Daemon, aendert nichts)
-  rpc Estimate (bareos.director.commands.EstimateCommand) returns (TextResponse);
+  rpc Estimate (onesimus.director.commands.EstimateCommand) returns (TextResponse);
 
   // ------------------------------------------------------------------------
   // list / llist (lesend, implementiert)
@@ -133,19 +133,19 @@ service DirectorApi {
   // ------------------------------------------------------------------------
 
   // status dir [days=<n>] [header] [running] [terminated]
-  rpc GetDirectorStatus (bareos.director.commands.StatusCommand) returns (DirectorStatusResponse);
+  rpc GetDirectorStatus (onesimus.director.commands.StatusCommand) returns (DirectorStatusResponse);
   // status all
-  rpc GetStatusAll (bareos.director.commands.StatusCommand) returns (DirectorStatusResponse);
+  rpc GetStatusAll (onesimus.director.commands.StatusCommand) returns (DirectorStatusResponse);
   // status scheduler [schedule=] [client=] [job=] [days=] | status schedule=<name>
   rpc GetSchedulerStatus (StatusSchedulerCommand) returns (SchedulerStatusResponse);
   // status client=<name>
-  rpc GetClientStatus (bareos.director.commands.StatusCommand) returns (ClientStatusResponse);
+  rpc GetClientStatus (onesimus.director.commands.StatusCommand) returns (ClientStatusResponse);
   // status storage=<name> [slots]
   rpc GetStorageStatus (StatusStorageCommand) returns (StorageStatusResponse);
   // status subscriptions [clients] [plugins] [all] [anonymize] [client=]
   rpc GetSubscriptions (StatusSubscriptionsCommand) returns (SubscriptionsResponse);
   // status configuration
-  rpc GetConfigurationStatus (bareos.director.commands.StatusCommand) returns (TextResponse);
+  rpc GetConfigurationStatus (onesimus.director.commands.StatusCommand) returns (TextResponse);
   // status job=<name>
   rpc GetJobStatus (StatusJobCommand) returns (TextResponse);
   // .status dir (current | last | header | scheduled | running | terminated)
@@ -159,18 +159,18 @@ service DirectorApi {
   // show (lesend, implementiert). Ohne Namen: alle Ressourcen des Typs.
   // ------------------------------------------------------------------------
 
-  rpc ShowCatalogs (bareos.director.commands.ShowCommand) returns (ShowResponse);
-  rpc ShowClients (bareos.director.commands.ShowCommand) returns (ShowResponse);
-  rpc ShowConsoles (bareos.director.commands.ShowCommand) returns (ShowResponse);
-  rpc ShowDirectors (bareos.director.commands.ShowCommand) returns (ShowResponse);
-  rpc ShowFilesets (bareos.director.commands.ShowCommand) returns (ShowResponse);
-  rpc ShowJobdefs (bareos.director.commands.ShowCommand) returns (ShowResponse);
-  rpc ShowJobs (bareos.director.commands.ShowCommand) returns (ShowResponse);
-  rpc ShowMessages (bareos.director.commands.ShowCommand) returns (ShowResponse);
-  rpc ShowPools (bareos.director.commands.ShowCommand) returns (ShowResponse);
-  rpc ShowProfiles (bareos.director.commands.ShowCommand) returns (ShowResponse);
-  rpc ShowSchedules (bareos.director.commands.ShowCommand) returns (ShowResponse);
-  rpc ShowStorages (bareos.director.commands.ShowCommand) returns (ShowResponse);
+  rpc ShowCatalogs (onesimus.director.commands.ShowCommand) returns (ShowResponse);
+  rpc ShowClients (onesimus.director.commands.ShowCommand) returns (ShowResponse);
+  rpc ShowConsoles (onesimus.director.commands.ShowCommand) returns (ShowResponse);
+  rpc ShowDirectors (onesimus.director.commands.ShowCommand) returns (ShowResponse);
+  rpc ShowFilesets (onesimus.director.commands.ShowCommand) returns (ShowResponse);
+  rpc ShowJobdefs (onesimus.director.commands.ShowCommand) returns (ShowResponse);
+  rpc ShowJobs (onesimus.director.commands.ShowCommand) returns (ShowResponse);
+  rpc ShowMessages (onesimus.director.commands.ShowCommand) returns (ShowResponse);
+  rpc ShowPools (onesimus.director.commands.ShowCommand) returns (ShowResponse);
+  rpc ShowProfiles (onesimus.director.commands.ShowCommand) returns (ShowResponse);
+  rpc ShowSchedules (onesimus.director.commands.ShowCommand) returns (ShowResponse);
+  rpc ShowStorages (onesimus.director.commands.ShowCommand) returns (ShowResponse);
   // show users | show user=<name>
   rpc ShowUsers (ShowUserCommand) returns (ShowResponse);
   // show counters | show counter=<name>
@@ -184,46 +184,46 @@ service DirectorApi {
   // Punkt-Befehle: Auflistungen (lesend, implementiert)
   // ------------------------------------------------------------------------
 
-  rpc DotJobs (bareos.director.commands.DotJobsCommand) returns (NameListResponse);
-  rpc DotJobdefs (bareos.director.commands.DotJobdefsCommand) returns (NameListResponse);
-  rpc DotClients (bareos.director.commands.DotClientsCommand) returns (NameListResponse);
-  rpc DotPools (bareos.director.commands.DotPoolsCommand) returns (NameListResponse);
+  rpc DotJobs (onesimus.director.commands.DotJobsCommand) returns (NameListResponse);
+  rpc DotJobdefs (onesimus.director.commands.DotJobdefsCommand) returns (NameListResponse);
+  rpc DotClients (onesimus.director.commands.DotClientsCommand) returns (NameListResponse);
+  rpc DotPools (onesimus.director.commands.DotPoolsCommand) returns (NameListResponse);
   // .storages (auch fuer den Onesimus-Alias .storage)
-  rpc DotStorages (bareos.director.commands.DotStoragesCommand) returns (NameListResponse);
-  rpc DotFilesets (bareos.director.commands.DotFilesetsCommand) returns (NameListResponse);
-  rpc DotCatalogs (bareos.director.commands.DotCatalogsCommand) returns (NameListResponse);
-  rpc DotConsoles (bareos.director.commands.DotConsolesCommand) returns (NameListResponse);
-  rpc DotUsers (bareos.director.commands.DotUsersCommand) returns (NameListResponse);
-  rpc DotSchedule (bareos.director.commands.DotScheduleCommand) returns (NameListResponse);
-  rpc DotMsgs (bareos.director.commands.DotMsgsCommand) returns (NameListResponse);
-  rpc DotProfiles (bareos.director.commands.DotProfilesCommand) returns (NameListResponse);
-  rpc DotTypes (bareos.director.commands.DotTypesCommand) returns (NameListResponse);
-  rpc DotVolstatus (bareos.director.commands.DotVolstatusCommand) returns (NameListResponse);
-  rpc DotActiononpurge (bareos.director.commands.DotActiononpurgeCommand) returns (NameListResponse);
-  rpc DotMedia (bareos.director.commands.DotMediaCommand) returns (NameListResponse);
-  rpc DotMediatypes (bareos.director.commands.DotMediatypesCommand) returns (NameListResponse);
-  rpc DotLocations (bareos.director.commands.DotLocationsCommand) returns (NameListResponse);
-  rpc DotLevels (bareos.director.commands.DotLevelsCommand) returns (LevelListResponse);
-  rpc DotJobstatus (bareos.director.commands.DotJobstatusCommand) returns (JobStatusListResponse);
-  rpc DotDefaults (bareos.director.commands.DotDefaultsCommand) returns (DefaultsResponse);
-  rpc DotAuthorized (bareos.director.commands.DotAuthorizedCommand) returns (AuthorizedResponse);
-  rpc DotSqlTables (bareos.director.commands.DotSqlTablesCommand) returns (SqlTablesResponse);
-  rpc DotSqlCount (bareos.director.commands.DotSqlCountCommand) returns (SqlTablesResponse);
-  rpc DotSqlSchema (bareos.director.commands.DotSqlSchemaCommand) returns (SqlSchemaResponse);
+  rpc DotStorages (onesimus.director.commands.DotStoragesCommand) returns (NameListResponse);
+  rpc DotFilesets (onesimus.director.commands.DotFilesetsCommand) returns (NameListResponse);
+  rpc DotCatalogs (onesimus.director.commands.DotCatalogsCommand) returns (NameListResponse);
+  rpc DotConsoles (onesimus.director.commands.DotConsolesCommand) returns (NameListResponse);
+  rpc DotUsers (onesimus.director.commands.DotUsersCommand) returns (NameListResponse);
+  rpc DotSchedule (onesimus.director.commands.DotScheduleCommand) returns (NameListResponse);
+  rpc DotMsgs (onesimus.director.commands.DotMsgsCommand) returns (NameListResponse);
+  rpc DotProfiles (onesimus.director.commands.DotProfilesCommand) returns (NameListResponse);
+  rpc DotTypes (onesimus.director.commands.DotTypesCommand) returns (NameListResponse);
+  rpc DotVolstatus (onesimus.director.commands.DotVolstatusCommand) returns (NameListResponse);
+  rpc DotActiononpurge (onesimus.director.commands.DotActiononpurgeCommand) returns (NameListResponse);
+  rpc DotMedia (onesimus.director.commands.DotMediaCommand) returns (NameListResponse);
+  rpc DotMediatypes (onesimus.director.commands.DotMediatypesCommand) returns (NameListResponse);
+  rpc DotLocations (onesimus.director.commands.DotLocationsCommand) returns (NameListResponse);
+  rpc DotLevels (onesimus.director.commands.DotLevelsCommand) returns (LevelListResponse);
+  rpc DotJobstatus (onesimus.director.commands.DotJobstatusCommand) returns (JobStatusListResponse);
+  rpc DotDefaults (onesimus.director.commands.DotDefaultsCommand) returns (DefaultsResponse);
+  rpc DotAuthorized (onesimus.director.commands.DotAuthorizedCommand) returns (AuthorizedResponse);
+  rpc DotSqlTables (onesimus.director.commands.DotSqlTablesCommand) returns (SqlTablesResponse);
+  rpc DotSqlCount (onesimus.director.commands.DotSqlCountCommand) returns (SqlTablesResponse);
+  rpc DotSqlSchema (onesimus.director.commands.DotSqlSchemaCommand) returns (SqlSchemaResponse);
   // .acl [list] [console=<name>]
-  rpc DotAclList (bareos.director.commands.DotAclListCommand) returns (AclListResponse);
+  rpc DotAclList (onesimus.director.commands.DotAclListCommand) returns (AclListResponse);
   // .profile [list]
-  rpc DotProfileList (bareos.director.commands.DotProfileListCommand) returns (NameListResponse);
+  rpc DotProfileList (onesimus.director.commands.DotProfileListCommand) returns (NameListResponse);
 
   // ------------------------------------------------------------------------
   // BVFS / OVFS (lesend, implementiert)
   // ------------------------------------------------------------------------
 
-  rpc DotBvfsGetJobids (bareos.director.commands.DotBvfsGetJobidsCommand) returns (BvfsJobIdsResponse);
-  rpc DotBvfsLsdirs (bareos.director.commands.DotBvfsLsdirsCommand) returns (BvfsListResponse);
-  rpc DotBvfsLsfiles (bareos.director.commands.DotBvfsLsfilesCommand) returns (BvfsListResponse);
+  rpc DotBvfsGetJobids (onesimus.director.commands.DotBvfsGetJobidsCommand) returns (BvfsJobIdsResponse);
+  rpc DotBvfsLsdirs (onesimus.director.commands.DotBvfsLsdirsCommand) returns (BvfsListResponse);
+  rpc DotBvfsLsfiles (onesimus.director.commands.DotBvfsLsfilesCommand) returns (BvfsListResponse);
   // .bvfs_versions jobid=0 client= pathid= filename= (jobid=0 setzt der Director)
-  rpc DotBvfsVersions (bareos.director.commands.DotBvfsVersionsCommand) returns (BvfsListResponse);
+  rpc DotBvfsVersions (onesimus.director.commands.DotBvfsVersionsCommand) returns (BvfsListResponse);
   rpc DotOvfsStatus (DotOvfsStatusCommand) returns (OvfsStatusResponse);
   rpc DotOvfsLatest (DotOvfsLatestCommand) returns (OvfsLatestResponse);
   rpc DotOvfsTree (DotOvfsTreeCommand) returns (OvfsTreeResponse);
@@ -242,18 +242,18 @@ service DirectorApi {
 
   rpc Run (RunJobCommand) returns (ActionResponse);
   rpc Rerun (RerunJobCommand) returns (ActionResponse);
-  rpc Cancel (bareos.director.commands.CancelCommand) returns (ActionResponse);
+  rpc Cancel (onesimus.director.commands.CancelCommand) returns (ActionResponse);
   // restore ... (nicht interaktiv: Auswahl ueber die Parameter, siehe auch
   // StartRestoreSession)
   rpc Restore (RestoreJobCommand) returns (ActionResponse);
   rpc Label (LabelVolumeCommand) returns (ActionResponse);
   rpc Relabel (RelabelVolumeCommand) returns (ActionResponse);
-  rpc Mount (bareos.director.commands.MountCommand) returns (ActionResponse);
+  rpc Mount (onesimus.director.commands.MountCommand) returns (ActionResponse);
   // unmount / umount
-  rpc Unmount (bareos.director.commands.UnmountCommand) returns (ActionResponse);
-  rpc Release (bareos.director.commands.ReleaseCommand) returns (ActionResponse);
-  rpc AddVolumes (bareos.director.commands.AddCommand) returns (ActionResponse);
-  rpc CreatePool (bareos.director.commands.CreateCommand) returns (ActionResponse);
+  rpc Unmount (onesimus.director.commands.UnmountCommand) returns (ActionResponse);
+  rpc Release (onesimus.director.commands.ReleaseCommand) returns (ActionResponse);
+  rpc AddVolumes (onesimus.director.commands.AddCommand) returns (ActionResponse);
+  rpc CreatePool (onesimus.director.commands.CreateCommand) returns (ActionResponse);
   // delete volume=<name> [pool=<name>]
   rpc DeleteVolume (DeleteObjectCommand) returns (ActionResponse);
   // delete pool=<name>
@@ -262,11 +262,11 @@ service DirectorApi {
   rpc DeleteJob (DeleteObjectCommand) returns (ActionResponse);
   // delete storage storage=<name>
   rpc DeleteStorage (DeleteObjectCommand) returns (ActionResponse);
-  rpc Enable (bareos.director.commands.EnableCommand) returns (ActionResponse);
-  rpc Disable (bareos.director.commands.DisableCommand) returns (ActionResponse);
-  rpc ExportVolumes (bareos.director.commands.ExportCommand) returns (ActionResponse);
-  rpc ImportVolumes (bareos.director.commands.ImportCommand) returns (ActionResponse);
-  rpc MoveVolumes (bareos.director.commands.MoveCommand) returns (ActionResponse);
+  rpc Enable (onesimus.director.commands.EnableCommand) returns (ActionResponse);
+  rpc Disable (onesimus.director.commands.DisableCommand) returns (ActionResponse);
+  rpc ExportVolumes (onesimus.director.commands.ExportCommand) returns (ActionResponse);
+  rpc ImportVolumes (onesimus.director.commands.ImportCommand) returns (ActionResponse);
+  rpc MoveVolumes (onesimus.director.commands.MoveCommand) returns (ActionResponse);
   // prune files [client=] [pool=]
   rpc PruneFiles (PruneTargetCommand) returns (ActionResponse);
   // prune jobs [client=] [pool=]
@@ -288,45 +288,45 @@ service DirectorApi {
   // update volume=<name> ...
   rpc UpdateVolume (UpdateVolumeCommand) returns (ActionResponse);
   // update pool=<name> ...
-  rpc UpdatePool (bareos.director.commands.UpdateCommand) returns (ActionResponse);
+  rpc UpdatePool (onesimus.director.commands.UpdateCommand) returns (ActionResponse);
   // update slots [storage=] [scan] [drive=]
   rpc UpdateSlots (UpdateSlotsCommand) returns (ActionResponse);
   // update jobid=<id> ...
-  rpc UpdateJob (bareos.director.commands.UpdateCommand) returns (ActionResponse);
+  rpc UpdateJob (onesimus.director.commands.UpdateCommand) returns (ActionResponse);
   // update stats [days=]
-  rpc UpdateStats (bareos.director.commands.UpdateCommand) returns (ActionResponse);
+  rpc UpdateStats (onesimus.director.commands.UpdateCommand) returns (ActionResponse);
   rpc Truncate (TruncateVolumesCommand) returns (ActionResponse);
   // configure add <resource-type> name=<name> <directives>
-  rpc ConfigureAdd (bareos.director.commands.ConfigureAddCommand) returns (ActionResponse);
+  rpc ConfigureAdd (onesimus.director.commands.ConfigureAddCommand) returns (ActionResponse);
   // configure export client=<name>
-  rpc ConfigureExport (bareos.director.commands.ConfigureExportCommand) returns (ActionResponse);
-  rpc ConfigureDelete (bareos.director.commands.ConfigureDeleteCommand) returns (ActionResponse);
-  rpc ConfigureUpdate (bareos.director.commands.ConfigureUpdateCommand) returns (ActionResponse);
-  rpc Reload (bareos.director.commands.ReloadCommand) returns (ActionResponse);
+  rpc ConfigureExport (onesimus.director.commands.ConfigureExportCommand) returns (ActionResponse);
+  rpc ConfigureDelete (onesimus.director.commands.ConfigureDeleteCommand) returns (ActionResponse);
+  rpc ConfigureUpdate (onesimus.director.commands.ConfigureUpdateCommand) returns (ActionResponse);
+  rpc Reload (onesimus.director.commands.ReloadCommand) returns (ActionResponse);
   rpc SetDebug (SetDebugLevelCommand) returns (ActionResponse);
-  rpc SetBandwidth (bareos.director.commands.SetbandwidthCommand) returns (ActionResponse);
-  rpc SetDevice (bareos.director.commands.SetdeviceCommand) returns (ActionResponse);
-  rpc SetIp (bareos.director.commands.SetipCommand) returns (ActionResponse);
+  rpc SetBandwidth (onesimus.director.commands.SetbandwidthCommand) returns (ActionResponse);
+  rpc SetDevice (onesimus.director.commands.SetdeviceCommand) returns (ActionResponse);
+  rpc SetIp (onesimus.director.commands.SetipCommand) returns (ActionResponse);
   rpc Trace (TraceSwitchCommand) returns (ActionResponse);
   // .sql query=<sql> (kann schreiben, daher hier)
-  rpc DotSql (bareos.director.commands.DotSqlCommand) returns (SqlQueryResponse);
+  rpc DotSql (onesimus.director.commands.DotSqlCommand) returns (SqlQueryResponse);
   // sqlquery <sql> (interaktiv in der Konsole)
-  rpc SqlQuery (bareos.director.commands.SqlQueryCommand) returns (SqlQueryResponse);
+  rpc SqlQuery (onesimus.director.commands.SqlQueryCommand) returns (SqlQueryResponse);
   // query: vordefinierte Abfrage <number> mit Parametern
   rpc Query (QueryRunCommand) returns (SqlQueryResponse);
-  rpc DotBvfsUpdate (bareos.director.commands.DotBvfsUpdateCommand) returns (ActionResponse);
-  rpc DotBvfsRestore (bareos.director.commands.DotBvfsRestoreCommand) returns (ActionResponse);
-  rpc DotBvfsCleanup (bareos.director.commands.DotBvfsCleanupCommand) returns (ActionResponse);
-  rpc DotBvfsClearCache (bareos.director.commands.DotBvfsClearCacheCommand) returns (ActionResponse);
-  rpc DotAclSet (bareos.director.commands.DotAclSetCommand) returns (ActionResponse);
-  rpc DotAclDelete (bareos.director.commands.DotAclDeleteCommand) returns (ActionResponse);
-  rpc DotAclClear (bareos.director.commands.DotAclClearCommand) returns (ActionResponse);
-  rpc DotAclCopy (bareos.director.commands.DotAclCopyCommand) returns (ActionResponse);
-  rpc DotProfileCreate (bareos.director.commands.DotProfileCreateCommand) returns (ActionResponse);
-  rpc DotProfileSet (bareos.director.commands.DotProfileSetCommand) returns (ActionResponse);
-  rpc DotProfileDelete (bareos.director.commands.DotProfileDeleteCommand) returns (ActionResponse);
-  rpc DotProfileAssign (bareos.director.commands.DotProfileAssignCommand) returns (ActionResponse);
-  rpc DotProfileUnassign (bareos.director.commands.DotProfileUnassignCommand) returns (ActionResponse);
+  rpc DotBvfsUpdate (onesimus.director.commands.DotBvfsUpdateCommand) returns (ActionResponse);
+  rpc DotBvfsRestore (onesimus.director.commands.DotBvfsRestoreCommand) returns (ActionResponse);
+  rpc DotBvfsCleanup (onesimus.director.commands.DotBvfsCleanupCommand) returns (ActionResponse);
+  rpc DotBvfsClearCache (onesimus.director.commands.DotBvfsClearCacheCommand) returns (ActionResponse);
+  rpc DotAclSet (onesimus.director.commands.DotAclSetCommand) returns (ActionResponse);
+  rpc DotAclDelete (onesimus.director.commands.DotAclDeleteCommand) returns (ActionResponse);
+  rpc DotAclClear (onesimus.director.commands.DotAclClearCommand) returns (ActionResponse);
+  rpc DotAclCopy (onesimus.director.commands.DotAclCopyCommand) returns (ActionResponse);
+  rpc DotProfileCreate (onesimus.director.commands.DotProfileCreateCommand) returns (ActionResponse);
+  rpc DotProfileSet (onesimus.director.commands.DotProfileSetCommand) returns (ActionResponse);
+  rpc DotProfileDelete (onesimus.director.commands.DotProfileDeleteCommand) returns (ActionResponse);
+  rpc DotProfileAssign (onesimus.director.commands.DotProfileAssignCommand) returns (ActionResponse);
+  rpc DotProfileUnassign (onesimus.director.commands.DotProfileUnassignCommand) returns (ActionResponse);
 
   // ------------------------------------------------------------------------
   // Sitzungsbefehle (S-35, Entwicklungs-Build). Sie wirken auf die Sitzung
@@ -336,19 +336,19 @@ service DirectorApi {
   // ------------------------------------------------------------------------
 
   // use catalog=<name>
-  rpc UseCatalog (bareos.director.commands.UseCommand) returns (ActionResponse);
+  rpc UseCatalog (onesimus.director.commands.UseCommand) returns (ActionResponse);
   // wait [jobid= | jobname= | ujobid= | mount] [timeout=]
-  rpc Wait (bareos.director.commands.WaitCommand) returns (ActionResponse);
+  rpc Wait (onesimus.director.commands.WaitCommand) returns (ActionResponse);
   rpc Gui (GuiSwitchCommand) returns (ActionResponse);
   rpc Autodisplay (AutodisplaySwitchCommand) returns (ActionResponse);
   rpc Automount (AutomountSwitchCommand) returns (ActionResponse);
   // .api <mode> [compact=]
   rpc DotApi (DotApiModeCommand) returns (ActionResponse);
-  rpc DotGrpc (bareos.director.commands.DotGrpcCommand) returns (ActionResponse);
+  rpc DotGrpc (onesimus.director.commands.DotGrpcCommand) returns (ActionResponse);
   // quit / exit / .quit: beendet die Sitzung (Session-Token wird ungueltig)
-  rpc Quit (bareos.director.commands.QuitCommand) returns (ActionResponse);
-  rpc Exit (bareos.director.commands.ExitCommand) returns (ActionResponse);
-  rpc DotQuit (bareos.director.commands.DotQuitCommand) returns (ActionResponse);
+  rpc Quit (onesimus.director.commands.QuitCommand) returns (ActionResponse);
+  rpc Exit (onesimus.director.commands.ExitCommand) returns (ActionResponse);
+  rpc DotQuit (onesimus.director.commands.DotQuitCommand) returns (ActionResponse);
 
   // ------------------------------------------------------------------------
   // Interaktive Wiederherstellung: Dateiauswahl im Restore-Baum (S-35,
@@ -487,55 +487,55 @@ enum VolumeStatus {
 
 // help [<command>]
 message HelpTopicCommand {
-  option (bareos.command_name) = "help";
-  option (bareos.help_text) = "Print help on specific command";
-  option (bareos.usage) = "help [<command>]";
+  option (onesimus.command_name) = "help";
+  option (onesimus.help_text) = "Print help on specific command";
+  option (onesimus.usage) = "help [<command>]";
 
   string command = 1;    // Befehl (positional); leer = alle Befehle
 }
 
 // .help [all] [item=<command>] [full]
 message DotHelpTopicCommand {
-  option (bareos.command_name) = ".help";
-  option (bareos.help_text) = "Print parsable information about a command";
-  option (bareos.usage) = ".help [ all ] [ item=cmd ] [ full ]";
+  option (onesimus.command_name) = ".help";
+  option (onesimus.help_text) = "Print parsable information about a command";
+  option (onesimus.usage) = ".help [ all ] [ item=cmd ] [ full ]";
 
-  bool all = 1    [(bareos.bare_flag) = true];
+  bool all = 1    [(onesimus.bare_flag) = true];
   string item = 2;
-  bool full = 3   [(bareos.bare_flag) = true];
+  bool full = 3   [(onesimus.bare_flag) = true];
 }
 
 // var <text>
 message VarExpandCommand {
-  option (bareos.command_name) = "var";
-  option (bareos.help_text) = "Does variable expansion";
-  option (bareos.usage) = "var <text>";
+  option (onesimus.command_name) = "var";
+  option (onesimus.help_text) = "Does variable expansion";
+  option (onesimus.usage) = "var <text>";
 
-  string text = 1 [(bareos.required) = true];  // positional
+  string text = 1 [(onesimus.required) = true];  // positional
 }
 
 // resolve [client=<name> | storage=<name>] <hostname>
 message ResolveHostCommand {
-  option (bareos.command_name) = "resolve";
-  option (bareos.help_text) = "Resolve a hostname";
-  option (bareos.usage) = "resolve [client=<client-name> | storage=<storage-name>] <host-name>";
+  option (onesimus.command_name) = "resolve";
+  option (onesimus.help_text) = "Resolve a hostname";
+  option (onesimus.usage) = "resolve [client=<client-name> | storage=<storage-name>] <host-name>";
 
   string client = 1;
   string storage = 2;
-  string hostname = 3 [(bareos.required) = true];  // positional
+  string hostname = 3 [(onesimus.required) = true];  // positional
 }
 
 // list jobs / list job=<name>
 message ListJobsCommand {
-  option (bareos.command_name) = "list jobs";
-  option (bareos.help_text) = "List jobs from catalog";
-  option (bareos.usage) = "list jobs [job=<job-name>] [client=<client-name>] "
+  option (onesimus.command_name) = "list jobs";
+  option (onesimus.help_text) = "List jobs from catalog";
+  option (onesimus.usage) = "list jobs [job=<job-name>] [client=<client-name>] "
                           "[jobstatus=<status>] [jobtype=<jobtype>] "
                           "[joblevel=<joblevel>] [volume=<volumename>] "
                           "[pool=<pool>] [days=<number>] [hours=<number>] "
                           "[last] [count] [limit=<number> [offset=<number>]]";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 
   string job = 1;
   string client = 2;
@@ -546,8 +546,8 @@ message ListJobsCommand {
   string pool = 7;
   uint32 days = 8;
   uint32 hours = 9;
-  bool last = 10    [(bareos.bare_flag) = true];
-  bool count = 11   [(bareos.bare_flag) = true];
+  bool last = 10    [(onesimus.bare_flag) = true];
+  bool count = 11   [(onesimus.bare_flag) = true];
   uint32 limit = 12;
   uint32 offset = 13;
   bool llist = 14;  // Langform (llist)
@@ -555,11 +555,11 @@ message ListJobsCommand {
 
 // list jobid=<id> | list ujobid=<name>
 message ListJobidCommand {
-  option (bareos.command_name) = "list jobid";
-  option (bareos.help_text) = "List one job from catalog";
-  option (bareos.usage) = "list jobid=<jobid> | ujobid=<complete_name>";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = "list jobid";
+  option (onesimus.help_text) = "List one job from catalog";
+  option (onesimus.usage) = "list jobid=<jobid> | ujobid=<complete_name>";
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 
   uint32 jobid = 1;
   string ujobid = 2;
@@ -568,15 +568,15 @@ message ListJobidCommand {
 
 // list backups client=<name> ...
 message ListBackupsCommand {
-  option (bareos.command_name) = "list backups";
-  option (bareos.help_text) = "List backups of a client";
-  option (bareos.usage) = "list backups client=<client-name> [fileset=<fileset-name>] "
+  option (onesimus.command_name) = "list backups";
+  option (onesimus.help_text) = "List backups of a client";
+  option (onesimus.usage) = "list backups client=<client-name> [fileset=<fileset-name>] "
                           "[jobstatus=<status>] [level=<level>] [order=<asc|desc>] "
                           "[limit=<number>] [days=<number>] [hours=<number>]";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 
-  string client = 1 [(bareos.required) = true];
+  string client = 1 [(onesimus.required) = true];
   string fileset = 2;
   string jobstatus = 3;
   string level = 4;
@@ -590,11 +590,11 @@ message ListBackupsCommand {
 
 // list copies [jobid=<ids>]
 message ListCopiesCommand {
-  option (bareos.command_name) = "list copies";
-  option (bareos.help_text) = "List copy jobs";
-  option (bareos.usage) = "list copies [jobid=<jobid>]";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = "list copies";
+  option (onesimus.help_text) = "List copy jobs";
+  option (onesimus.usage) = "list copies [jobid=<jobid>]";
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 
   string jobid = 1;  // JobId oder Liste "1,2,3"
   bool llist = 2;
@@ -602,25 +602,25 @@ message ListCopiesCommand {
 
 // list joblog jobid=<id> | ujobid=<name> [count]
 message ListJoblogCommand {
-  option (bareos.command_name) = "list joblog";
-  option (bareos.help_text) = "List the log of a job";
-  option (bareos.usage) = "list joblog jobid=<jobid> [count] | joblog ujobid=<complete_name> [count]";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = "list joblog";
+  option (onesimus.help_text) = "List the log of a job";
+  option (onesimus.usage) = "list joblog jobid=<jobid> [count] | joblog ujobid=<complete_name> [count]";
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 
   uint32 jobid = 1;
   string ujobid = 2;
-  bool count = 3 [(bareos.bare_flag) = true];
+  bool count = 3 [(onesimus.bare_flag) = true];
   bool llist = 4;
 }
 
 // list jobmedia jobid=<id> | ujobid=<name>
 message ListJobmediaCommand {
-  option (bareos.command_name) = "list jobmedia";
-  option (bareos.help_text) = "List the JobMedia records of a job";
-  option (bareos.usage) = "list jobmedia jobid=<jobid> | jobmedia ujobid=<complete_name>";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = "list jobmedia";
+  option (onesimus.help_text) = "List the JobMedia records of a job";
+  option (onesimus.usage) = "list jobmedia jobid=<jobid> | jobmedia ujobid=<complete_name>";
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 
   uint32 jobid = 1;
   string ujobid = 2;
@@ -629,30 +629,30 @@ message ListJobmediaCommand {
 
 // list jobtotals
 message ListJobtotalsCommand {
-  option (bareos.command_name) = "list jobtotals";
-  option (bareos.help_text) = "List job totals per job name";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = "list jobtotals";
+  option (onesimus.help_text) = "List job totals per job name";
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 }
 
 // list jobstatistics jobid=<id>
 message ListJobstatisticsCommand {
-  option (bareos.command_name) = "list jobstatistics";
-  option (bareos.help_text) = "List the statistics samples of a job";
-  option (bareos.usage) = "list jobstatistics jobid=<jobid>";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = "list jobstatistics";
+  option (onesimus.help_text) = "List the statistics samples of a job";
+  option (onesimus.usage) = "list jobstatistics jobid=<jobid>";
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 
-  uint32 jobid = 1 [(bareos.required) = true];
+  uint32 jobid = 1 [(onesimus.required) = true];
 }
 
 // list files jobid=<id> | ujobid=<name>
 message ListFilesCommand {
-  option (bareos.command_name) = "list files";
-  option (bareos.help_text) = "List the files of a job";
-  option (bareos.usage) = "list files jobid=<jobid> | files ujobid=<complete_name>";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = "list files";
+  option (onesimus.help_text) = "List the files of a job";
+  option (onesimus.usage) = "list files jobid=<jobid> | files ujobid=<complete_name>";
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 
   uint32 jobid = 1;
   string ujobid = 2;
@@ -662,11 +662,11 @@ message ListFilesCommand {
 
 // list basefiles jobid=<id> | ujobid=<name>
 message ListBasefilesCommand {
-  option (bareos.command_name) = "list basefiles";
-  option (bareos.help_text) = "List the base files of a job";
-  option (bareos.usage) = "list basefiles ( jobid=<jobid> | ujobid=<complete_name> )";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = "list basefiles";
+  option (onesimus.help_text) = "List the base files of a job";
+  option (onesimus.usage) = "list basefiles ( jobid=<jobid> | ujobid=<complete_name> )";
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 
   uint32 jobid = 1;
   string ujobid = 2;
@@ -674,32 +674,32 @@ message ListBasefilesCommand {
 
 // list log [client=<name>] [reverse]
 message ListLogCommand {
-  option (bareos.command_name) = "list log";
-  option (bareos.help_text) = "List the Log table";
-  option (bareos.usage) = "list log [client=<client-name>] [reverse] [limit=<number> [offset=<number>]]";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = "list log";
+  option (onesimus.help_text) = "List the Log table";
+  option (onesimus.usage) = "list log [client=<client-name>] [reverse] [limit=<number> [offset=<number>]]";
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 
   string client = 1;
-  bool reverse = 2 [(bareos.bare_flag) = true];
+  bool reverse = 2 [(onesimus.bare_flag) = true];
   uint32 limit = 3;
   uint32 offset = 4;
 }
 
 // list volumes / list media
 message ListVolumesCommand {
-  option (bareos.command_name) = "list volumes";
-  option (bareos.help_text) = "List volumes";
-  option (bareos.usage) = "list volumes [ jobid=<jobid> | ujobid=<complete_name> | "
+  option (onesimus.command_name) = "list volumes";
+  option (onesimus.help_text) = "List volumes";
+  option (onesimus.usage) = "list volumes [ jobid=<jobid> | ujobid=<complete_name> | "
                           "pool=<pool-name> | all ] [count] [limit=<number> [offset=<number>]]";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 
   uint32 jobid = 1;
   string ujobid = 2;
   string pool = 3;
-  bool all = 4     [(bareos.bare_flag) = true];
-  bool count = 5   [(bareos.bare_flag) = true];
+  bool all = 4     [(onesimus.bare_flag) = true];
+  bool count = 5   [(onesimus.bare_flag) = true];
   uint32 limit = 6;
   uint32 offset = 7;
   bool llist = 8;
@@ -707,12 +707,12 @@ message ListVolumesCommand {
 
 // list volume=<name> | volumeid=<id> | mediaid=<id> | media=<name>
 message ListVolumeCommand {
-  option (bareos.command_name) = "list volume";
-  option (bareos.help_text) = "List one volume";
-  option (bareos.usage) = "list volume=<volume-name> | volumeid=<volumeid> | "
+  option (onesimus.command_name) = "list volume";
+  option (onesimus.help_text) = "List one volume";
+  option (onesimus.usage) = "list volume=<volume-name> | volumeid=<volumeid> | "
                           "mediaid=<volumeid> | media=<media-name>";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 
   string volume = 1;
   uint32 volumeid = 2;
@@ -723,11 +723,11 @@ message ListVolumeCommand {
 
 // list pools | list pool=<name> | list poolid=<id>
 message ListPoolsCommand {
-  option (bareos.command_name) = "list pools";
-  option (bareos.help_text) = "List pools";
-  option (bareos.usage) = "list pools | pool=<pool-name> | poolid=<poolid>";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = "list pools";
+  option (onesimus.help_text) = "List pools";
+  option (onesimus.usage) = "list pools | pool=<pool-name> | poolid=<poolid>";
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 
   string pool = 1;
   uint32 poolid = 2;
@@ -736,11 +736,11 @@ message ListPoolsCommand {
 
 // list clients | list client=<name>
 message ListClientsCommand {
-  option (bareos.command_name) = "list clients";
-  option (bareos.help_text) = "List clients";
-  option (bareos.usage) = "list clients | client=<client-name>";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = "list clients";
+  option (onesimus.help_text) = "List clients";
+  option (onesimus.usage) = "list clients | client=<client-name>";
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 
   string client = 1;
   bool llist = 2;
@@ -748,12 +748,12 @@ message ListClientsCommand {
 
 // list filesets | list fileset [filesetid= | jobid= | ujobid=]
 message ListFilesetsCommand {
-  option (bareos.command_name) = "list filesets";
-  option (bareos.help_text) = "List filesets";
-  option (bareos.usage) = "list filesets | fileset [ filesetid=<filesetid> ] | "
+  option (onesimus.command_name) = "list filesets";
+  option (onesimus.help_text) = "List filesets";
+  option (onesimus.usage) = "list filesets | fileset [ filesetid=<filesetid> ] | "
                           "fileset [ jobid=<jobid> ] | fileset [ ujobid=<complete_name> ]";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 
   uint32 filesetid = 1;
   uint32 jobid = 2;
@@ -763,33 +763,33 @@ message ListFilesetsCommand {
 
 // list storages
 message ListStoragesCommand {
-  option (bareos.command_name) = "list storages";
-  option (bareos.help_text) = "List storages";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = "list storages";
+  option (onesimus.help_text) = "List storages";
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 
   bool llist = 1;
 }
 
 // list nextvolume job=<name> [days=<n>]
 message ListNextvolumeCommand {
-  option (bareos.command_name) = "list nextvolume";
-  option (bareos.help_text) = "List the next volume a job will use";
-  option (bareos.usage) = "list nextvolume job=<job-name> [days=<number>]";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = "list nextvolume";
+  option (onesimus.help_text) = "List the next volume a job will use";
+  option (onesimus.usage) = "list nextvolume job=<job-name> [days=<number>]";
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 
-  string job = 1 [(bareos.required) = true];
+  string job = 1 [(onesimus.required) = true];
   uint32 days = 2;
 }
 
 // status scheduler / status schedule=<name>
 message StatusSchedulerCommand {
-  option (bareos.command_name) = "status scheduler";
-  option (bareos.help_text) = "Report scheduler status and preview";
-  option (bareos.usage) = "status scheduler [schedule=<schedule-name>] [client=<client-name>] "
+  option (onesimus.command_name) = "status scheduler";
+  option (onesimus.help_text) = "Report scheduler status and preview";
+  option (onesimus.usage) = "status scheduler [schedule=<schedule-name>] [client=<client-name>] "
                           "[job=<job-name>] [days=<number>]";
-  option (bareos.audit_event) = true;
+  option (onesimus.audit_event) = true;
 
   string schedule = 1;
   string client = 2;
@@ -799,153 +799,153 @@ message StatusSchedulerCommand {
 
 // status storage=<name> [slots]
 message StatusStorageCommand {
-  option (bareos.command_name) = "status storage";
-  option (bareos.help_text) = "Report storage daemon status";
-  option (bareos.usage) = "status storage=<storage-name> [slots]";
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = "status storage";
+  option (onesimus.help_text) = "Report storage daemon status";
+  option (onesimus.usage) = "status storage=<storage-name> [slots]";
+  option (onesimus.audit_event) = true;
 
-  string storage = 1 [(bareos.required) = true];
-  bool slots = 2     [(bareos.bare_flag) = true];
+  string storage = 1 [(onesimus.required) = true];
+  bool slots = 2     [(onesimus.bare_flag) = true];
 }
 
 // status subscriptions [clients] [plugins] [all] [anonymize] [client=<name>]
 message StatusSubscriptionsCommand {
-  option (bareos.command_name) = "status subscriptions";
-  option (bareos.help_text) = "Report subscription usage";
-  option (bareos.usage) = "status subscriptions [clients] [plugins] [all] [anonymize] [client=<client-name>]";
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = "status subscriptions";
+  option (onesimus.help_text) = "Report subscription usage";
+  option (onesimus.usage) = "status subscriptions [clients] [plugins] [all] [anonymize] [client=<client-name>]";
+  option (onesimus.audit_event) = true;
 
-  bool clients = 1    [(bareos.bare_flag) = true];
-  bool plugins = 2    [(bareos.bare_flag) = true];
-  bool all = 3        [(bareos.bare_flag) = true];
-  bool anonymize = 4  [(bareos.bare_flag) = true];
+  bool clients = 1    [(onesimus.bare_flag) = true];
+  bool plugins = 2    [(onesimus.bare_flag) = true];
+  bool all = 3        [(onesimus.bare_flag) = true];
+  bool anonymize = 4  [(onesimus.bare_flag) = true];
   string client = 5;
 }
 
 // status job=<name>
 message StatusJobCommand {
-  option (bareos.command_name) = "status job";
-  option (bareos.help_text) = "Report status of a running job";
-  option (bareos.usage) = "status job=<job-name>";
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = "status job";
+  option (onesimus.help_text) = "Report status of a running job";
+  option (onesimus.usage) = "status job=<job-name>";
+  option (onesimus.audit_event) = true;
 
-  string job = 1 [(bareos.required) = true];
+  string job = 1 [(onesimus.required) = true];
 }
 
 // .status dir (current | last | header | scheduled | running | terminated)
 message DotStatusDirCommand {
-  option (bareos.command_name) = ".status dir";
-  option (bareos.help_text) = "Report director status";
-  option (bareos.usage) = ".status dir ( current | last | header | scheduled | running | terminated )";
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = ".status dir";
+  option (onesimus.help_text) = "Report director status";
+  option (onesimus.usage) = ".status dir ( current | last | header | scheduled | running | terminated )";
+  option (onesimus.audit_event) = true;
 
-  bool current = 1     [(bareos.bare_flag) = true];
-  bool last = 2        [(bareos.bare_flag) = true];
-  bool header = 3      [(bareos.bare_flag) = true];
-  bool scheduled = 4   [(bareos.bare_flag) = true];
-  bool running = 5     [(bareos.bare_flag) = true];
-  bool terminated = 6  [(bareos.bare_flag) = true];
+  bool current = 1     [(onesimus.bare_flag) = true];
+  bool last = 2        [(onesimus.bare_flag) = true];
+  bool header = 3      [(onesimus.bare_flag) = true];
+  bool scheduled = 4   [(onesimus.bare_flag) = true];
+  bool running = 5     [(onesimus.bare_flag) = true];
+  bool terminated = 6  [(onesimus.bare_flag) = true];
 }
 
 // .status client=<name> [header | terminated | running]
 message DotStatusClientCommand {
-  option (bareos.command_name) = ".status client";
-  option (bareos.help_text) = "Report client status";
-  option (bareos.usage) = ".status client=<client> [ header | terminated | running ]";
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = ".status client";
+  option (onesimus.help_text) = "Report client status";
+  option (onesimus.usage) = ".status client=<client> [ header | terminated | running ]";
+  option (onesimus.audit_event) = true;
 
-  string client = 1 [(bareos.required) = true];
-  bool header = 2      [(bareos.bare_flag) = true];
-  bool terminated = 3  [(bareos.bare_flag) = true];
-  bool running = 4     [(bareos.bare_flag) = true];
+  string client = 1 [(onesimus.required) = true];
+  bool header = 2      [(onesimus.bare_flag) = true];
+  bool terminated = 3  [(onesimus.bare_flag) = true];
+  bool running = 4     [(onesimus.bare_flag) = true];
 }
 
 // .status storage=<name> [header | waitreservation | devices | volumes | spooling | running | terminated]
 message DotStatusStorageCommand {
-  option (bareos.command_name) = ".status storage";
-  option (bareos.help_text) = "Report storage status";
-  option (bareos.usage) = ".status storage=<storage> [ header | waitreservation | devices | "
+  option (onesimus.command_name) = ".status storage";
+  option (onesimus.help_text) = "Report storage status";
+  option (onesimus.usage) = ".status storage=<storage> [ header | waitreservation | devices | "
                           "volumes | spooling | running | terminated ]";
-  option (bareos.audit_event) = true;
+  option (onesimus.audit_event) = true;
 
-  string storage = 1 [(bareos.required) = true];
-  bool header = 2           [(bareos.bare_flag) = true];
-  bool waitreservation = 3  [(bareos.bare_flag) = true];
-  bool devices = 4          [(bareos.bare_flag) = true];
-  bool volumes = 5          [(bareos.bare_flag) = true];
-  bool spooling = 6         [(bareos.bare_flag) = true];
-  bool running = 7          [(bareos.bare_flag) = true];
-  bool terminated = 8       [(bareos.bare_flag) = true];
+  string storage = 1 [(onesimus.required) = true];
+  bool header = 2           [(onesimus.bare_flag) = true];
+  bool waitreservation = 3  [(onesimus.bare_flag) = true];
+  bool devices = 4          [(onesimus.bare_flag) = true];
+  bool volumes = 5          [(onesimus.bare_flag) = true];
+  bool spooling = 6         [(onesimus.bare_flag) = true];
+  bool running = 7          [(onesimus.bare_flag) = true];
+  bool terminated = 8       [(onesimus.bare_flag) = true];
 }
 
 // show users | show user=<name>
 message ShowUserCommand {
-  option (bareos.command_name) = "show users";
-  option (bareos.help_text) = "Show user resources";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = "show users";
+  option (onesimus.help_text) = "Show user resources";
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 
   string user = 1;
 }
 
 // show counters | show counter=<name>
 message ShowCounterCommand {
-  option (bareos.command_name) = "show counters";
-  option (bareos.help_text) = "Show counter resources";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = "show counters";
+  option (onesimus.help_text) = "Show counter resources";
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 
   string counter = 1;
 }
 
 // show all [verbose]
 message ShowAllCommand {
-  option (bareos.command_name) = "show all";
-  option (bareos.help_text) = "Show all resources";
-  option (bareos.usage) = "show all [verbose]";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = "show all";
+  option (onesimus.help_text) = "Show all resources";
+  option (onesimus.usage) = "show all [verbose]";
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 
-  bool verbose = 1 [(bareos.bare_flag) = true];
+  bool verbose = 1 [(onesimus.bare_flag) = true];
 }
 
 // show disabled [clients | jobs | schedules]
 message ShowDisabledCommand {
-  option (bareos.command_name) = "show disabled";
-  option (bareos.help_text) = "Show disabled resources";
-  option (bareos.usage) = "show disabled [ clients | jobs | schedules ]";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = "show disabled";
+  option (onesimus.help_text) = "Show disabled resources";
+  option (onesimus.usage) = "show disabled [ clients | jobs | schedules ]";
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 
-  bool clients = 1    [(bareos.bare_flag) = true];
-  bool jobs = 2       [(bareos.bare_flag) = true];
-  bool schedules = 3  [(bareos.bare_flag) = true];
+  bool clients = 1    [(onesimus.bare_flag) = true];
+  bool jobs = 2       [(onesimus.bare_flag) = true];
+  bool schedules = 3  [(onesimus.bare_flag) = true];
 }
 
 // .ovfs_status [refresh]
 message DotOvfsStatusCommand {
-  option (bareos.command_name) = ".ovfs_status";
-  option (bareos.help_text) = "Show whether restore trees use the ovfs extension or the Director fallback";
-  option (bareos.usage) = ".ovfs_status [refresh]";
+  option (onesimus.command_name) = ".ovfs_status";
+  option (onesimus.help_text) = "Show whether restore trees use the ovfs extension or the Director fallback";
+  option (onesimus.usage) = ".ovfs_status [refresh]";
 
-  bool refresh = 1 [(bareos.bare_flag) = true];
+  bool refresh = 1 [(onesimus.bare_flag) = true];
 }
 
 // .ovfs_latest client=<name> [fileset=<name>]
 message DotOvfsLatestCommand {
-  option (bareos.command_name) = ".ovfs_latest";
-  option (bareos.help_text) = "Job chain of a client's latest state (restore option 5)";
-  option (bareos.usage) = ".ovfs_latest client=<client-name> [fileset=<fileset-name>]";
+  option (onesimus.command_name) = ".ovfs_latest";
+  option (onesimus.help_text) = "Job chain of a client's latest state (restore option 5)";
+  option (onesimus.usage) = ".ovfs_latest client=<client-name> [fileset=<fileset-name>]";
 
-  string client = 1 [(bareos.required) = true];
+  string client = 1 [(onesimus.required) = true];
   string fileset = 2;
 }
 
 // .ovfs_tree (jobid=<list> | client=<name> [fileset=<name>]) [root=] [depth=] [max_entries=]
 message DotOvfsTreeCommand {
-  option (bareos.command_name) = ".ovfs_tree";
-  option (bareos.help_text) = "Restore tree of a job chain as JSON (OVFS)";
-  option (bareos.usage) = ".ovfs_tree jobid=<list> | client=<client-name> [fileset=<fileset-name>] "
+  option (onesimus.command_name) = ".ovfs_tree";
+  option (onesimus.help_text) = "Restore tree of a job chain as JSON (OVFS)";
+  option (onesimus.usage) = ".ovfs_tree jobid=<list> | client=<client-name> [fileset=<fileset-name>] "
                           "[root=<dir>] [depth=<n>] [max_entries=<n>]";
 
   string jobid = 1;       // JobId-Liste "1,2,3"
@@ -958,119 +958,119 @@ message DotOvfsTreeCommand {
 
 // .ovfs_ls (jobid=<list> | client=<name> [fileset=<name>]) path=<dir>
 message DotOvfsLsCommand {
-  option (bareos.command_name) = ".ovfs_ls";
-  option (bareos.help_text) = "Direct children of one directory of a job chain (OVFS)";
-  option (bareos.usage) = ".ovfs_ls jobid=<list> | client=<client-name> [fileset=<fileset-name>] path=<dir>";
+  option (onesimus.command_name) = ".ovfs_ls";
+  option (onesimus.help_text) = "Direct children of one directory of a job chain (OVFS)";
+  option (onesimus.usage) = ".ovfs_ls jobid=<list> | client=<client-name> [fileset=<fileset-name>] path=<dir>";
 
   string jobid = 1;
   string client = 2;
   string fileset = 3;
-  string path = 4 [(bareos.required) = true];
+  string path = 4 [(onesimus.required) = true];
 }
 
 // .ovfs_versions client=<name> path=<dir> [name=<file>] [copies]
 message DotOvfsVersionsCommand {
-  option (bareos.command_name) = ".ovfs_versions";
-  option (bareos.help_text) = "All versions of one file of a client (OVFS)";
-  option (bareos.usage) = ".ovfs_versions client=<client-name> path=<dir> [name=<file>] [copies]";
+  option (onesimus.command_name) = ".ovfs_versions";
+  option (onesimus.help_text) = "All versions of one file of a client (OVFS)";
+  option (onesimus.usage) = ".ovfs_versions client=<client-name> path=<dir> [name=<file>] [copies]";
 
-  string client = 1 [(bareos.required) = true];
-  string path = 2   [(bareos.required) = true];
+  string client = 1 [(onesimus.required) = true];
+  string path = 2   [(onesimus.required) = true];
   string name = 3;
-  bool copies = 4   [(bareos.bare_flag) = true];
+  bool copies = 4   [(onesimus.bare_flag) = true];
 }
 
 // prune volume [=<name>] [all] [pool=<name>] [yes]
 message PruneVolumeCommand {
-  option (bareos.command_name) = "prune volume";
-  option (bareos.help_text) = "Prune a volume";
-  option (bareos.usage) = "prune volume [all] [=volume] [pool=<pool>] [yes]";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = "prune volume";
+  option (onesimus.help_text) = "Prune a volume";
+  option (onesimus.usage) = "prune volume [all] [=volume] [pool=<pool>] [yes]";
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 
   string volume = 1;
-  bool all = 2     [(bareos.bare_flag) = true];
+  bool all = 2     [(onesimus.bare_flag) = true];
   string pool = 3;
-  bool yes = 4     [(bareos.bare_flag) = true];  // ohne Wirkung, siehe confirm
+  bool yes = 4     [(onesimus.bare_flag) = true];  // ohne Wirkung, siehe confirm
   bool confirm = 5;  // muss true sein (zerstoerend)
 }
 
 // prune directory [=<dir>] [client=<name>] [recursive] [yes]
 message PruneDirectoryCommand {
-  option (bareos.command_name) = "prune directory";
-  option (bareos.help_text) = "Prune a directory";
-  option (bareos.usage) = "prune directory [=directory] [client=<client>] [recursive] [yes]";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = "prune directory";
+  option (onesimus.help_text) = "Prune a directory";
+  option (onesimus.usage) = "prune directory [=directory] [client=<client>] [recursive] [yes]";
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 
   string directory = 1;
   string client = 2;
-  bool recursive = 3  [(bareos.bare_flag) = true];
-  bool yes = 4        [(bareos.bare_flag) = true];  // ohne Wirkung, siehe confirm
+  bool recursive = 3  [(onesimus.bare_flag) = true];
+  bool yes = 4        [(onesimus.bare_flag) = true];  // ohne Wirkung, siehe confirm
   bool confirm = 5;   // muss true sein (zerstoerend)
 }
 
 // update slots [storage=<name>] [scan] [drive=<n>]
 message UpdateSlotsCommand {
-  option (bareos.command_name) = "update slots";
-  option (bareos.help_text) = "Update slots from the autochanger";
-  option (bareos.usage) = "update slots [storage=<storage-name>] [scan] [drive=<drivenum>]";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = "update slots";
+  option (onesimus.help_text) = "Update slots from the autochanger";
+  option (onesimus.usage) = "update slots [storage=<storage-name>] [scan] [drive=<drivenum>]";
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 
   string storage = 1;
-  bool scan = 2    [(bareos.bare_flag) = true];
+  bool scan = 2    [(onesimus.bare_flag) = true];
   int32 drive = 3;
 }
 
 // trace on | off
 message TraceSwitchCommand {
-  option (bareos.command_name) = "trace";
-  option (bareos.help_text) = "Turn on/off trace to file";
-  option (bareos.usage) = "trace on | off";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = "trace";
+  option (onesimus.help_text) = "Turn on/off trace to file";
+  option (onesimus.usage) = "trace on | off";
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 
-  bool on = 1   [(bareos.bare_flag) = true];
-  bool off = 2  [(bareos.bare_flag) = true];
+  bool on = 1   [(onesimus.bare_flag) = true];
+  bool off = 2  [(onesimus.bare_flag) = true];
 }
 
 // gui on | off
 message GuiSwitchCommand {
-  option (bareos.command_name) = "gui";
-  option (bareos.help_text) = "Switch between interactive (gui off) and non-interactive (gui on) mode";
-  option (bareos.usage) = "gui on | off";
+  option (onesimus.command_name) = "gui";
+  option (onesimus.help_text) = "Switch between interactive (gui off) and non-interactive (gui on) mode";
+  option (onesimus.usage) = "gui on | off";
 
-  bool on = 1   [(bareos.bare_flag) = true];
-  bool off = 2  [(bareos.bare_flag) = true];
+  bool on = 1   [(onesimus.bare_flag) = true];
+  bool off = 2  [(onesimus.bare_flag) = true];
 }
 
 // autodisplay on | off
 message AutodisplaySwitchCommand {
-  option (bareos.command_name) = "autodisplay";
-  option (bareos.help_text) = "Autodisplay console messages";
-  option (bareos.usage) = "autodisplay on | off";
+  option (onesimus.command_name) = "autodisplay";
+  option (onesimus.help_text) = "Autodisplay console messages";
+  option (onesimus.usage) = "autodisplay on | off";
 
-  bool on = 1   [(bareos.bare_flag) = true];
-  bool off = 2  [(bareos.bare_flag) = true];
+  bool on = 1   [(onesimus.bare_flag) = true];
+  bool off = 2  [(onesimus.bare_flag) = true];
 }
 
 // automount on | off
 message AutomountSwitchCommand {
-  option (bareos.command_name) = "automount";
-  option (bareos.help_text) = "Automount after label";
-  option (bareos.usage) = "automount on | off";
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = "automount";
+  option (onesimus.help_text) = "Automount after label";
+  option (onesimus.usage) = "automount on | off";
+  option (onesimus.audit_event) = true;
 
-  bool on = 1   [(bareos.bare_flag) = true];
-  bool off = 2  [(bareos.bare_flag) = true];
+  bool on = 1   [(onesimus.bare_flag) = true];
+  bool off = 2  [(onesimus.bare_flag) = true];
 }
 
 // .api [0 | 1 | 2 | off | on | json] [compact=<yes|no>]
 message DotApiModeCommand {
-  option (bareos.command_name) = ".api";
-  option (bareos.help_text) = "Switch between different api modes";
-  option (bareos.usage) = ".api [ 0 | 1 | 2 | off | on | json ] [compact=<yes|no>]";
+  option (onesimus.command_name) = ".api";
+  option (onesimus.help_text) = "Switch between different api modes";
+  option (onesimus.usage) = ".api [ 0 | 1 | 2 | off | on | json ] [compact=<yes|no>]";
 
   string mode = 1;     // positional
   string compact = 2;
@@ -1078,29 +1078,29 @@ message DotApiModeCommand {
 
 // query: vordefinierte Abfrage aus der QueryFile
 message QueryRunCommand {
-  option (bareos.command_name) = "query";
-  option (bareos.help_text) = "Query catalog";
-  option (bareos.audit_event) = true;
+  option (onesimus.command_name) = "query";
+  option (onesimus.help_text) = "Query catalog";
+  option (onesimus.audit_event) = true;
 
-  uint32 number = 1 [(bareos.required) = true];  // Nummer der Abfrage
+  uint32 number = 1 [(onesimus.required) = true];  // Nummer der Abfrage
   repeated string parameters = 2;                // Antworten auf die Rueckfragen
 }
 
 // Dateiauswahl einer Restore-Sitzung ohne Pfad (pwd, count, estimate,
 // help, done, abort)
 message RestoreTreeSessionCommand {
-  option (bareos.command_name) = "restore tree";
-  option (bareos.help_text) = "Restore file selection command";
+  option (onesimus.command_name) = "restore tree";
+  option (onesimus.help_text) = "Restore file selection command";
 
-  string session_id = 1 [(bareos.required) = true];  // aus StartRestoreSession
+  string session_id = 1 [(onesimus.required) = true];  // aus StartRestoreSession
 }
 
 // Dateiauswahl einer Restore-Sitzung mit Pfad/Muster (cd, ls, mark, find ...)
 message RestoreTreePathCommand {
-  option (bareos.command_name) = "restore tree";
-  option (bareos.help_text) = "Restore file selection command";
+  option (onesimus.command_name) = "restore tree";
+  option (onesimus.help_text) = "Restore file selection command";
 
-  string session_id = 1 [(bareos.required) = true];
+  string session_id = 1 [(onesimus.required) = true];
   string path = 2;  // Verzeichnis oder Muster (Wildcards erlaubt)
 }
 
@@ -1111,14 +1111,14 @@ message RestoreTreePathCommand {
 
 // run job=<name> ... yes
 message RunJobCommand {
-  option (bareos.command_name) = "run";
-  option (bareos.help_text) = "Run a job";
-  option (bareos.usage) = "run job=<job-name> [level=] [client=] [fileset=] [pool=] [nextpool=] "
+  option (onesimus.command_name) = "run";
+  option (onesimus.help_text) = "Run a job";
+  option (onesimus.usage) = "run job=<job-name> [level=] [client=] [fileset=] [pool=] [nextpool=] "
                           "[storage=] [when=] [since=] [priority=] [jobid=] [spooldata=] "
                           "[accurate=] [comment=] [catalog=] [pluginoptions=] yes";
-  option (bareos.audit_event) = true;
+  option (onesimus.audit_event) = true;
 
-  string job = 1 [(bareos.required) = true];
+  string job = 1 [(onesimus.required) = true];
   string level = 2;            // Full, Incremental, Differential, VirtualFull ...
   string client = 3;
   string fileset = 4;
@@ -1138,11 +1138,11 @@ message RunJobCommand {
 
 // rerun jobid=<ids> | since_jobid= [until_jobid=] | days= / hours= ... yes
 message RerunJobCommand {
-  option (bareos.command_name) = "rerun";
-  option (bareos.help_text) = "Rerun a job";
-  option (bareos.usage) = "rerun jobid=<jobid> | since_jobid=<jobid> [ until_jobid=<jobid> ] | "
+  option (onesimus.command_name) = "rerun";
+  option (onesimus.help_text) = "Rerun a job";
+  option (onesimus.usage) = "rerun jobid=<jobid> | since_jobid=<jobid> [ until_jobid=<jobid> ] | "
                           "days=<nr_days> | hours=<nr_hours> yes";
-  option (bareos.audit_event) = true;
+  option (onesimus.audit_event) = true;
 
   repeated uint32 jobid = 1;
   uint32 since_jobid = 2;
@@ -1154,15 +1154,15 @@ message RerunJobCommand {
 // restore ... (nicht interaktiv: "all" oder file=/directory=/fileregex=,
 // dann "done ... yes")
 message RestoreJobCommand {
-  option (bareos.command_name) = "restore";
-  option (bareos.help_text) = "Restore files";
-  option (bareos.usage) = "restore client=<client-name> (jobid=<ids> | [fileset=] [before=] select current) "
+  option (onesimus.command_name) = "restore";
+  option (onesimus.help_text) = "Restore files";
+  option (onesimus.usage) = "restore client=<client-name> (jobid=<ids> | [fileset=] [before=] select current) "
                           "(all | file=<path> ... | directory=<dir/> ... | fileregex=<regex>) "
                           "[where= | regexwhere= | strip_prefix= add_prefix= add_suffix=] "
                           "[replace=] [restoreclient=] [restorejob=] [storage=] [comment=] done yes";
-  option (bareos.audit_event) = true;
+  option (onesimus.audit_event) = true;
 
-  string client = 1 [(bareos.required) = true];
+  string client = 1 [(onesimus.required) = true];
   repeated uint32 jobid = 2;   // leer: juengster Stand (select current) bzw. before
   string fileset = 3;
   string pool = 4;
@@ -1187,13 +1187,13 @@ message RestoreJobCommand {
 // restore ... bis zur Dateiauswahl (StartRestoreSession); die Auswahl
 // folgt mit den RestoreTree*-RPCs
 message RestoreSessionCommand {
-  option (bareos.command_name) = "restore";
-  option (bareos.help_text) = "Restore files, interactive file selection";
-  option (bareos.usage) = "restore client=<client-name> (jobid=<ids> | [fileset=] [before=] select current) "
+  option (onesimus.command_name) = "restore";
+  option (onesimus.help_text) = "Restore files, interactive file selection";
+  option (onesimus.usage) = "restore client=<client-name> (jobid=<ids> | [fileset=] [before=] select current) "
                           "[where=] [replace=] [restoreclient=] [restorejob=] [storage=] [comment=]";
-  option (bareos.audit_event) = true;
+  option (onesimus.audit_event) = true;
 
-  string client = 1 [(bareos.required) = true];
+  string client = 1 [(onesimus.required) = true];
   repeated uint32 jobid = 2;
   string fileset = 3;
   string pool = 4;
@@ -1213,36 +1213,36 @@ message RestoreSessionCommand {
 
 // label storage= volume= pool= [slot=] [drive=] [encrypt] [barcodes] yes
 message LabelVolumeCommand {
-  option (bareos.command_name) = "label";
-  option (bareos.help_text) = "Label a tape";
-  option (bareos.usage) = "label storage=<storage-name> volume=<volume-name> pool=<pool-name> "
+  option (onesimus.command_name) = "label";
+  option (onesimus.help_text) = "Label a tape";
+  option (onesimus.usage) = "label storage=<storage-name> volume=<volume-name> pool=<pool-name> "
                           "[slot=<slot>] [drive=<drivenum>] [encrypt] [barcodes] yes";
-  option (bareos.audit_event) = true;
+  option (onesimus.audit_event) = true;
 
-  string storage = 1 [(bareos.required) = true];
+  string storage = 1 [(onesimus.required) = true];
   string volume = 2;           // Pflicht ausser bei barcodes
-  string pool = 3 [(bareos.required) = true];
+  string pool = 3 [(onesimus.required) = true];
   uint32 slot = 4;
   uint32 drive = 5;
-  bool encrypt = 6   [(bareos.bare_flag) = true];
-  bool barcodes = 7  [(bareos.bare_flag) = true];
+  bool encrypt = 6   [(onesimus.bare_flag) = true];
+  bool barcodes = 7  [(onesimus.bare_flag) = true];
 }
 
 // relabel storage= oldvolume= volume= [pool=] ... yes (zerstoerend)
 message RelabelVolumeCommand {
-  option (bareos.command_name) = "relabel";
-  option (bareos.help_text) = "Relabel a tape";
-  option (bareos.usage) = "relabel storage=<storage-name> oldvolume=<old-volume-name> "
+  option (onesimus.command_name) = "relabel";
+  option (onesimus.help_text) = "Relabel a tape";
+  option (onesimus.usage) = "relabel storage=<storage-name> oldvolume=<old-volume-name> "
                           "volume=<new-volume-name> [pool=<pool-name>] [slot=] [drive=] [encrypt] yes";
-  option (bareos.audit_event) = true;
+  option (onesimus.audit_event) = true;
 
-  string storage = 1 [(bareos.required) = true];
-  string oldvolume = 2 [(bareos.required) = true];
-  string volume = 3 [(bareos.required) = true];
+  string storage = 1 [(onesimus.required) = true];
+  string oldvolume = 2 [(onesimus.required) = true];
+  string volume = 3 [(onesimus.required) = true];
   string pool = 4;
   uint32 slot = 5;
   uint32 drive = 6;
-  bool encrypt = 7 [(bareos.bare_flag) = true];
+  bool encrypt = 7 [(onesimus.bare_flag) = true];
   bool confirm = 8;  // muss true sein (zerstoerend)
 }
 
@@ -1250,12 +1250,12 @@ message RelabelVolumeCommand {
 // (zerstoerend; die Rueckfrage "Are you sure you want to delete" wird mit
 // yes beantwortet)
 message DeleteObjectCommand {
-  option (bareos.command_name) = "delete";
-  option (bareos.help_text) = "Delete volume, pool or job";
-  option (bareos.usage) = "delete volume=<vol-name> [pool=<pool-name>] | pool=<pool-name> | "
+  option (onesimus.command_name) = "delete";
+  option (onesimus.help_text) = "Delete volume, pool or job";
+  option (onesimus.usage) = "delete volume=<vol-name> [pool=<pool-name>] | pool=<pool-name> | "
                           "jobid=<jobid1,jobid2,...> | storage=<storage-name>";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 
   string volume = 1;           // DeleteVolume
   string pool = 2;             // DeletePool; bei DeleteVolume: Pool des Volumes
@@ -1266,12 +1266,12 @@ message DeleteObjectCommand {
 
 // prune files|jobs [client=] [pool=] yes, prune stats yes (zerstoerend)
 message PruneTargetCommand {
-  option (bareos.command_name) = "prune";
-  option (bareos.help_text) = "Prune records from catalog";
-  option (bareos.usage) = "prune files [client=<client>] [pool=<pool>] yes | "
+  option (onesimus.command_name) = "prune";
+  option (onesimus.help_text) = "Prune records from catalog";
+  option (onesimus.usage) = "prune files [client=<client>] [pool=<pool>] yes | "
                           "jobs [client=<client>] [pool=<pool>] yes | stats yes";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 
   string client = 1;
   string pool = 2;
@@ -1281,14 +1281,14 @@ message PruneTargetCommand {
 // purge files|jobs|volume|quota ... (zerstoerend; "Purge (yes/no)?" wird
 // mit yes beantwortet)
 message PurgeTargetCommand {
-  option (bareos.command_name) = "purge";
-  option (bareos.help_text) = "Purge records from catalog";
-  option (bareos.usage) = "purge files [job= | jobid= | client= | volume=] | "
+  option (onesimus.command_name) = "purge";
+  option (onesimus.help_text) = "Purge records from catalog";
+  option (onesimus.usage) = "purge files [job= | jobid= | client= | volume=] | "
                           "jobs [client= | volume= | pool=] [jobstatus=] | "
                           "volume[=<volume>] [action=<action>] [storage=] [pool= | allpools] [drive=] | "
                           "quota [client=]";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 
   repeated string volume = 1;  // PurgeVolume: mehrere erlaubt
   uint32 jobid = 2;
@@ -1298,7 +1298,7 @@ message PurgeTargetCommand {
   string jobstatus = 6;        // Statuszeichen, durch Komma getrennt
   string action = 7;           // PurgeVolume: truncate | all
   string storage = 8;
-  bool allpools = 9  [(bareos.bare_flag) = true];
+  bool allpools = 9  [(onesimus.bare_flag) = true];
   uint32 drive = 10;
   string devicetype = 11;
   bool confirm = 12;           // muss true sein (zerstoerend)
@@ -1307,18 +1307,18 @@ message PurgeTargetCommand {
 // update volume=<name> <eigenschaften> | update volume allfrompool=<pool>
 // | update volume fromallpools
 message UpdateVolumeCommand {
-  option (bareos.command_name) = "update volume";
-  option (bareos.help_text) = "Update volume records";
-  option (bareos.usage) = "update volume=<volume-name> [volstatus=] [volretention=] [voluse=] "
+  option (onesimus.command_name) = "update volume";
+  option (onesimus.help_text) = "Update volume records";
+  option (onesimus.usage) = "update volume=<volume-name> [volstatus=] [volretention=] [voluse=] "
                           "[maxvolbytes=] [maxvoljobs=] [maxvolfiles=] [slot=] [recycle=] "
                           "[inchanger=] [enabled=] [actiononpurge=] [pool=] [recyclepool=] "
                           "[storage=] [frompool] [encrypt=] | allfrompool=<pool> | fromallpools";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 
   string volume = 1;
   string allfrompool = 2;
-  bool fromallpools = 3  [(bareos.bare_flag) = true];
+  bool fromallpools = 3  [(onesimus.bare_flag) = true];
   string volstatus = 4;        // Append, Full, Used, Recycle, Purged, Error, Archive, Read-Only, Disabled
   string volretention = 5;     // Zeitangabe, z.B. "30 days"
   string voluse = 6;
@@ -1340,12 +1340,12 @@ message UpdateVolumeCommand {
 // truncate volstatus=Purged [storage=] [pool=] [volume=] [drive=] yes
 // (zerstoerend)
 message TruncateVolumesCommand {
-  option (bareos.command_name) = "truncate";
-  option (bareos.help_text) = "Truncate purged volumes";
-  option (bareos.usage) = "truncate volstatus=Purged [storage=<storage>] [pool=<pool>] "
+  option (onesimus.command_name) = "truncate";
+  option (onesimus.help_text) = "Truncate purged volumes";
+  option (onesimus.usage) = "truncate volstatus=Purged [storage=<storage>] [pool=<pool>] "
                           "[volume=<volume>] [drive=<drivenum>] yes";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 
   string storage = 1;
   string pool = 2;
@@ -1357,19 +1357,19 @@ message TruncateVolumesCommand {
 // setdebug level=<n> [trace=0/1] [timestamp=0/1] [hangup=] dir | all |
 // client=<name> | storage=<name>
 message SetDebugLevelCommand {
-  option (bareos.command_name) = "setdebug";
-  option (bareos.help_text) = "Sets debug level";
-  option (bareos.usage) = "setdebug level=<nn> [trace=0/1] [timestamp=0/1] [hangup=<n>] "
+  option (onesimus.command_name) = "setdebug";
+  option (onesimus.help_text) = "Sets debug level";
+  option (onesimus.usage) = "setdebug level=<nn> [trace=0/1] [timestamp=0/1] [hangup=<n>] "
                           "dir | all | client=<client-name> | storage=<storage-name>";
-  option (bareos.allowed_in_runscript) = true;
-  option (bareos.audit_event) = true;
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
 
   uint32 level = 1;
   optional bool trace = 2;
   optional bool timestamp = 3;
   optional uint32 hangup = 4;
-  bool dir = 5     [(bareos.bare_flag) = true];
-  bool all = 6     [(bareos.bare_flag) = true];
+  bool dir = 5     [(onesimus.bare_flag) = true];
+  bool all = 6     [(onesimus.bare_flag) = true];
   string client = 7;
   string storage = 8;
 }
