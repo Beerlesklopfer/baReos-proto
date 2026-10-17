@@ -1,0 +1,2069 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// BAREOS® - Backup Archiving REcovery Open Sourced
+//
+// Copyright (C) 2025 Bareos GmbH & Co. KG
+//
+// Typisierte Director-API (DirectorApi).
+//
+// Ergaenzt den Dienst "Director" (director_service.proto) um typisierte
+// RPCs: je Befehl bzw. Unterbefehl eine RPC, deren Antwort eine
+// strukturierte Message statt Text/JSON ist. Rein additiv; bestehende
+// Messages, Felder und RPCs bleiben unveraendert.
+//
+// Konventionen dieser Datei:
+//   - Requests sind *Command-Messages mit den Optionen aus
+//     bareos_options.proto (command_name, help_text, usage ...). Wo eine
+//     Message aus director_commands.proto alle Parameter einer Unterform
+//     enthaelt, wird sie wiederverwendet; neue Requests nur, wo keine passt.
+//     command_name enthaelt das Unterkommando ("list jobs"), wie bei
+//     ConfigureAddCommand ("configure add").
+//   - Request-Felder heissen wie die Konsolen-Schluesselwoerter (jobid,
+//     ujobid, ...); bool-Felder mit bare_flag sind Schluesselwoerter ohne Wert.
+//     Das Feld "llist" waehlt die Langform (llist statt list).
+//   - Ergebnis-Datensaetze heissen *Info (wie ServerInfo, CommandInfo),
+//     RPC-Antworten *Response. Feldnamen der Datensaetze sind die Schluessel
+//     der API-2-JSON-Ausgabe (".api 2") des Directors bzw. die
+//     Katalogspalten in Kleinschreibung ("-" wird zu "_").
+//   - Zeitangaben bleiben Text im Format des Directors
+//     ("YYYY-MM-DD HH:MM:SS", Ortszeit des Directors), weil der Katalog sie
+//     ohne Zeitzone speichert; Unix-Zeitstempel sind int64 (wie in
+//     director_service.proto).
+//   - Byte-Zaehler sind uint64, IDs uint32, Zaehler uint32/uint64.
+//   - Enums: <ENUM_NAME>_UNSPECIFIED = 0. Bei JobStatus, JobType und
+//     JobLevel ist der Zahlenwert der ASCII-Code des Katalogzeichens
+//     (JOB_STATUS_TERMINATED = 84 = 'T').
+//   - extra_fields (Feldnummer 100): Werte der JSON-Ausgabe, fuer die es
+//     (noch) kein typisiertes Feld gibt oder die sich nicht verlustfrei
+//     umwandeln lassen, als JSON-Text. Damit geht kein Wert verloren.
+//
+// Authentifizierung: wie beim Dienst "Director" (Login, Metadata-Header
+// "x-onesimus-session"). Jede RPC laeuft mit den ACLs der angemeldeten
+// Konsole durch dieselbe Befehlsimplementierung wie der Konsolenbefehl.
+//
+// Fehler: Befehl nicht erlaubt (CommandACL) -> PERMISSION_DENIED,
+// Befehl fehlgeschlagen -> FAILED_PRECONDITION mit den Fehlermeldungen,
+// noch nicht implementiert (Schreib-RPCs, S-35) -> UNIMPLEMENTED.
+
+syntax = "proto3";
+package bareos.director.api;
+
+import "bareos_options.proto";
+import "director_commands.proto";
+import "google/protobuf/struct.proto";
+
+// ==========================================================================
+// DirectorApi Service
+// ==========================================================================
+
+service DirectorApi {
+  // ------------------------------------------------------------------------
+  // Info, Hilfe, Meldungen (lesend, implementiert)
+  // ------------------------------------------------------------------------
+
+  // version
+  rpc GetVersion (bareos.director.commands.VersionCommand) returns (VersionResponse);
+  // time
+  rpc GetTime (bareos.director.commands.TimeCommand) returns (TimeResponse);
+  // whoami
+  rpc Whoami (bareos.director.commands.WhoamiCommand) returns (WhoamiResponse);
+  // memory
+  rpc GetMemory (bareos.director.commands.MemoryCommand) returns (MemoryResponse);
+  // . (no op)
+  rpc Noop (bareos.director.commands.DotCommand) returns (NoopResponse);
+  // help [<command>]
+  rpc Help (HelpTopicCommand) returns (HelpResponse);
+  // .help [all] [item=<command>] [full]
+  rpc DotHelp (DotHelpTopicCommand) returns (HelpResponse);
+  // messages (holt die wartenden Meldungen der Konsole ab)
+  rpc GetMessages (bareos.director.commands.MessagesCommand) returns (MessagesResponse);
+  // .messages
+  rpc DotMessages (bareos.director.commands.DotMessagesCommand) returns (MessagesResponse);
+  // var <text>
+  rpc ExpandVariables (VarExpandCommand) returns (TextResponse);
+  // resolve [client=<name> | storage=<name>] <hostname>
+  rpc Resolve (ResolveHostCommand) returns (TextResponse);
+  // estimate job=<name> ... (fragt den File Daemon, aendert nichts)
+  rpc Estimate (bareos.director.commands.EstimateCommand) returns (TextResponse);
+
+  // ------------------------------------------------------------------------
+  // list / llist (lesend, implementiert)
+  // ------------------------------------------------------------------------
+
+  // list jobs [job=] [client=] [jobstatus=] ... | list job=<name> ...
+  rpc ListJobs (ListJobsCommand) returns (ListJobsResponse);
+  // list jobid=<id> | list ujobid=<name>
+  rpc GetJob (ListJobidCommand) returns (ListJobsResponse);
+  // list backups client=<name> ...
+  rpc ListBackups (ListBackupsCommand) returns (ListJobsResponse);
+  // list copies [jobid=<ids>]
+  rpc ListCopies (ListCopiesCommand) returns (ListCopiesResponse);
+  // list joblog jobid=<id> [count]
+  rpc ListJobLog (ListJoblogCommand) returns (ListJobLogResponse);
+  // list jobmedia jobid=<id>
+  rpc ListJobMedia (ListJobmediaCommand) returns (ListJobMediaResponse);
+  // list jobtotals
+  rpc ListJobTotals (ListJobtotalsCommand) returns (ListJobTotalsResponse);
+  // list jobstatistics jobid=<id>
+  rpc ListJobStatistics (ListJobstatisticsCommand) returns (ListJobStatisticsResponse);
+  // list files jobid=<id>
+  rpc ListFiles (ListFilesCommand) returns (ListFilesResponse);
+  // list basefiles jobid=<id>
+  rpc ListBaseFiles (ListBasefilesCommand) returns (ListFilesResponse);
+  // list log [client=<name>] [reverse]
+  rpc ListLog (ListLogCommand) returns (ListLogResponse);
+  // list volumes [jobid= | ujobid= | pool= | all] [count]
+  rpc ListVolumes (ListVolumesCommand) returns (ListVolumesResponse);
+  // list media [...] (gleichbedeutend mit list volumes)
+  rpc ListMedia (ListVolumesCommand) returns (ListVolumesResponse);
+  // list volume=<name> | volumeid=<id> | mediaid=<id> | media=<name>
+  rpc GetVolume (ListVolumeCommand) returns (GetVolumeResponse);
+  // list pools | list pool=<name> | list poolid=<id>
+  rpc ListPools (ListPoolsCommand) returns (ListPoolsResponse);
+  // list clients | list client=<name>
+  rpc ListClients (ListClientsCommand) returns (ListClientsResponse);
+  // list filesets | list fileset [filesetid= | jobid= | ujobid=]
+  rpc ListFilesets (ListFilesetsCommand) returns (ListFilesetsResponse);
+  // list storages
+  rpc ListStorages (ListStoragesCommand) returns (ListStoragesResponse);
+  // list nextvolume job=<name> [days=<n>]
+  rpc ListNextVolume (ListNextvolumeCommand) returns (NextVolumeResponse);
+
+  // ------------------------------------------------------------------------
+  // status / .status (lesend, implementiert)
+  // ------------------------------------------------------------------------
+
+  // status dir [days=<n>] [header] [running] [terminated]
+  rpc GetDirectorStatus (bareos.director.commands.StatusCommand) returns (DirectorStatusResponse);
+  // status all
+  rpc GetStatusAll (bareos.director.commands.StatusCommand) returns (DirectorStatusResponse);
+  // status scheduler [schedule=] [client=] [job=] [days=] | status schedule=<name>
+  rpc GetSchedulerStatus (StatusSchedulerCommand) returns (SchedulerStatusResponse);
+  // status client=<name>
+  rpc GetClientStatus (bareos.director.commands.StatusCommand) returns (ClientStatusResponse);
+  // status storage=<name> [slots]
+  rpc GetStorageStatus (StatusStorageCommand) returns (StorageStatusResponse);
+  // status subscriptions [clients] [plugins] [all] [anonymize] [client=]
+  rpc GetSubscriptions (StatusSubscriptionsCommand) returns (SubscriptionsResponse);
+  // status configuration
+  rpc GetConfigurationStatus (bareos.director.commands.StatusCommand) returns (TextResponse);
+  // status job=<name>
+  rpc GetJobStatus (StatusJobCommand) returns (TextResponse);
+  // .status dir (current | last | header | scheduled | running | terminated)
+  rpc DotStatusDirector (DotStatusDirCommand) returns (DirectorStatusResponse);
+  // .status client=<name> [header | running | terminated]
+  rpc DotStatusClient (DotStatusClientCommand) returns (ClientStatusResponse);
+  // .status storage=<name> [header | waitreservation | devices | volumes | spooling | running | terminated]
+  rpc DotStatusStorage (DotStatusStorageCommand) returns (StorageStatusResponse);
+
+  // ------------------------------------------------------------------------
+  // show (lesend, implementiert). Ohne Namen: alle Ressourcen des Typs.
+  // ------------------------------------------------------------------------
+
+  rpc ShowCatalogs (bareos.director.commands.ShowCommand) returns (ShowResponse);
+  rpc ShowClients (bareos.director.commands.ShowCommand) returns (ShowResponse);
+  rpc ShowConsoles (bareos.director.commands.ShowCommand) returns (ShowResponse);
+  rpc ShowDirectors (bareos.director.commands.ShowCommand) returns (ShowResponse);
+  rpc ShowFilesets (bareos.director.commands.ShowCommand) returns (ShowResponse);
+  rpc ShowJobdefs (bareos.director.commands.ShowCommand) returns (ShowResponse);
+  rpc ShowJobs (bareos.director.commands.ShowCommand) returns (ShowResponse);
+  rpc ShowMessages (bareos.director.commands.ShowCommand) returns (ShowResponse);
+  rpc ShowPools (bareos.director.commands.ShowCommand) returns (ShowResponse);
+  rpc ShowProfiles (bareos.director.commands.ShowCommand) returns (ShowResponse);
+  rpc ShowSchedules (bareos.director.commands.ShowCommand) returns (ShowResponse);
+  rpc ShowStorages (bareos.director.commands.ShowCommand) returns (ShowResponse);
+  // show users | show user=<name>
+  rpc ShowUsers (ShowUserCommand) returns (ShowResponse);
+  // show counters | show counter=<name>
+  rpc ShowCounters (ShowCounterCommand) returns (ShowResponse);
+  // show all [verbose]
+  rpc ShowAll (ShowAllCommand) returns (ShowResponse);
+  // show disabled [clients | jobs | schedules]
+  rpc ShowDisabled (ShowDisabledCommand) returns (ShowDisabledResponse);
+
+  // ------------------------------------------------------------------------
+  // Punkt-Befehle: Auflistungen (lesend, implementiert)
+  // ------------------------------------------------------------------------
+
+  rpc DotJobs (bareos.director.commands.DotJobsCommand) returns (NameListResponse);
+  rpc DotJobdefs (bareos.director.commands.DotJobdefsCommand) returns (NameListResponse);
+  rpc DotClients (bareos.director.commands.DotClientsCommand) returns (NameListResponse);
+  rpc DotPools (bareos.director.commands.DotPoolsCommand) returns (NameListResponse);
+  // .storages (auch fuer den Onesimus-Alias .storage)
+  rpc DotStorages (bareos.director.commands.DotStoragesCommand) returns (NameListResponse);
+  rpc DotFilesets (bareos.director.commands.DotFilesetsCommand) returns (NameListResponse);
+  rpc DotCatalogs (bareos.director.commands.DotCatalogsCommand) returns (NameListResponse);
+  rpc DotConsoles (bareos.director.commands.DotConsolesCommand) returns (NameListResponse);
+  rpc DotUsers (bareos.director.commands.DotUsersCommand) returns (NameListResponse);
+  rpc DotSchedule (bareos.director.commands.DotScheduleCommand) returns (NameListResponse);
+  rpc DotMsgs (bareos.director.commands.DotMsgsCommand) returns (NameListResponse);
+  rpc DotProfiles (bareos.director.commands.DotProfilesCommand) returns (NameListResponse);
+  rpc DotTypes (bareos.director.commands.DotTypesCommand) returns (NameListResponse);
+  rpc DotVolstatus (bareos.director.commands.DotVolstatusCommand) returns (NameListResponse);
+  rpc DotActiononpurge (bareos.director.commands.DotActiononpurgeCommand) returns (NameListResponse);
+  rpc DotMedia (bareos.director.commands.DotMediaCommand) returns (NameListResponse);
+  rpc DotMediatypes (bareos.director.commands.DotMediatypesCommand) returns (NameListResponse);
+  rpc DotLocations (bareos.director.commands.DotLocationsCommand) returns (NameListResponse);
+  rpc DotLevels (bareos.director.commands.DotLevelsCommand) returns (LevelListResponse);
+  rpc DotJobstatus (bareos.director.commands.DotJobstatusCommand) returns (JobStatusListResponse);
+  rpc DotDefaults (bareos.director.commands.DotDefaultsCommand) returns (DefaultsResponse);
+  rpc DotAuthorized (bareos.director.commands.DotAuthorizedCommand) returns (AuthorizedResponse);
+  rpc DotSqlTables (bareos.director.commands.DotSqlTablesCommand) returns (SqlTablesResponse);
+  rpc DotSqlCount (bareos.director.commands.DotSqlCountCommand) returns (SqlTablesResponse);
+  rpc DotSqlSchema (bareos.director.commands.DotSqlSchemaCommand) returns (SqlSchemaResponse);
+  // .acl [list] [console=<name>]
+  rpc DotAclList (bareos.director.commands.DotAclListCommand) returns (AclListResponse);
+  // .profile [list]
+  rpc DotProfileList (bareos.director.commands.DotProfileListCommand) returns (NameListResponse);
+
+  // ------------------------------------------------------------------------
+  // BVFS / OVFS (lesend, implementiert)
+  // ------------------------------------------------------------------------
+
+  rpc DotBvfsGetJobids (bareos.director.commands.DotBvfsGetJobidsCommand) returns (BvfsJobIdsResponse);
+  rpc DotBvfsLsdirs (bareos.director.commands.DotBvfsLsdirsCommand) returns (BvfsListResponse);
+  rpc DotBvfsLsfiles (bareos.director.commands.DotBvfsLsfilesCommand) returns (BvfsListResponse);
+  // .bvfs_versions jobid=0 client= pathid= filename= (jobid=0 setzt der Director)
+  rpc DotBvfsVersions (bareos.director.commands.DotBvfsVersionsCommand) returns (BvfsListResponse);
+  rpc DotOvfsStatus (DotOvfsStatusCommand) returns (OvfsStatusResponse);
+  rpc DotOvfsLatest (DotOvfsLatestCommand) returns (OvfsLatestResponse);
+  rpc DotOvfsTree (DotOvfsTreeCommand) returns (OvfsTreeResponse);
+  rpc DotOvfsLs (DotOvfsLsCommand) returns (OvfsLsResponse);
+  rpc DotOvfsVersions (DotOvfsVersionsCommand) returns (OvfsVersionsResponse);
+
+  // ------------------------------------------------------------------------
+  // Schreibende Befehle (definiert; Implementierung S-35, bis dahin
+  // UNIMPLEMENTED)
+  // ------------------------------------------------------------------------
+
+  rpc Run (bareos.director.commands.RunCommand) returns (ActionResponse);
+  rpc Rerun (bareos.director.commands.RerunCommand) returns (ActionResponse);
+  rpc Cancel (bareos.director.commands.CancelCommand) returns (ActionResponse);
+  // restore ... (nicht interaktiv: Auswahl ueber die Parameter, siehe auch
+  // StartRestoreSession)
+  rpc Restore (bareos.director.commands.RestoreCommand) returns (ActionResponse);
+  rpc Label (bareos.director.commands.LabelCommand) returns (ActionResponse);
+  rpc Relabel (bareos.director.commands.RelabelCommand) returns (ActionResponse);
+  rpc Mount (bareos.director.commands.MountCommand) returns (ActionResponse);
+  // unmount / umount
+  rpc Unmount (bareos.director.commands.UnmountCommand) returns (ActionResponse);
+  rpc Release (bareos.director.commands.ReleaseCommand) returns (ActionResponse);
+  rpc AddVolumes (bareos.director.commands.AddCommand) returns (ActionResponse);
+  rpc CreatePool (bareos.director.commands.CreateCommand) returns (ActionResponse);
+  // delete volume=<name> [pool=<name>]
+  rpc DeleteVolume (bareos.director.commands.DeleteCommand) returns (ActionResponse);
+  // delete pool=<name>
+  rpc DeletePool (bareos.director.commands.DeleteCommand) returns (ActionResponse);
+  // delete jobid=<ids>
+  rpc DeleteJob (bareos.director.commands.DeleteCommand) returns (ActionResponse);
+  // delete storage storage=<name>
+  rpc DeleteStorage (bareos.director.commands.DeleteCommand) returns (ActionResponse);
+  rpc Enable (bareos.director.commands.EnableCommand) returns (ActionResponse);
+  rpc Disable (bareos.director.commands.DisableCommand) returns (ActionResponse);
+  rpc ExportVolumes (bareos.director.commands.ExportCommand) returns (ActionResponse);
+  rpc ImportVolumes (bareos.director.commands.ImportCommand) returns (ActionResponse);
+  rpc MoveVolumes (bareos.director.commands.MoveCommand) returns (ActionResponse);
+  // prune files [client=] [pool=]
+  rpc PruneFiles (bareos.director.commands.PruneCommand) returns (ActionResponse);
+  // prune jobs [client=] [pool=]
+  rpc PruneJobs (bareos.director.commands.PruneCommand) returns (ActionResponse);
+  // prune volume [=<name>] [all] [pool=]
+  rpc PruneVolume (PruneVolumeCommand) returns (ActionResponse);
+  // prune stats
+  rpc PruneStats (bareos.director.commands.PruneCommand) returns (ActionResponse);
+  // prune directory [=<dir>] [client=] [recursive]
+  rpc PruneDirectory (PruneDirectoryCommand) returns (ActionResponse);
+  // purge files [job= | jobid= | client= | volume=]
+  rpc PurgeFiles (bareos.director.commands.PurgeCommand) returns (ActionResponse);
+  // purge jobs [client= | volume= | pool=] [jobstatus=]
+  rpc PurgeJobs (bareos.director.commands.PurgeCommand) returns (ActionResponse);
+  // purge volume[=<name>] [storage=] [pool=] [devicetype=] [drive=] [action=]
+  rpc PurgeVolume (bareos.director.commands.PurgeCommand) returns (ActionResponse);
+  // purge quota [client=]
+  rpc PurgeQuota (bareos.director.commands.PurgeCommand) returns (ActionResponse);
+  // update volume=<name> ...
+  rpc UpdateVolume (bareos.director.commands.UpdateCommand) returns (ActionResponse);
+  // update pool=<name> ...
+  rpc UpdatePool (bareos.director.commands.UpdateCommand) returns (ActionResponse);
+  // update slots [storage=] [scan] [drive=]
+  rpc UpdateSlots (UpdateSlotsCommand) returns (ActionResponse);
+  // update jobid=<id> ...
+  rpc UpdateJob (bareos.director.commands.UpdateCommand) returns (ActionResponse);
+  // update stats [days=]
+  rpc UpdateStats (bareos.director.commands.UpdateCommand) returns (ActionResponse);
+  rpc Truncate (bareos.director.commands.TruncateCommand) returns (ActionResponse);
+  // configure add <resource-type> name=<name> <directives>
+  rpc ConfigureAdd (bareos.director.commands.ConfigureAddCommand) returns (ActionResponse);
+  // configure export client=<name>
+  rpc ConfigureExport (bareos.director.commands.ConfigureExportCommand) returns (ActionResponse);
+  rpc ConfigureDelete (bareos.director.commands.ConfigureDeleteCommand) returns (ActionResponse);
+  rpc ConfigureUpdate (bareos.director.commands.ConfigureUpdateCommand) returns (ActionResponse);
+  rpc Reload (bareos.director.commands.ReloadCommand) returns (ActionResponse);
+  rpc SetDebug (bareos.director.commands.SetdebugCommand) returns (ActionResponse);
+  rpc SetBandwidth (bareos.director.commands.SetbandwidthCommand) returns (ActionResponse);
+  rpc SetDevice (bareos.director.commands.SetdeviceCommand) returns (ActionResponse);
+  rpc SetIp (bareos.director.commands.SetipCommand) returns (ActionResponse);
+  rpc Trace (TraceSwitchCommand) returns (ActionResponse);
+  // .sql query=<sql> (kann schreiben, daher hier)
+  rpc DotSql (bareos.director.commands.DotSqlCommand) returns (SqlQueryResponse);
+  // sqlquery <sql> (interaktiv in der Konsole)
+  rpc SqlQuery (bareos.director.commands.SqlQueryCommand) returns (SqlQueryResponse);
+  // query: vordefinierte Abfrage <number> mit Parametern
+  rpc Query (QueryRunCommand) returns (SqlQueryResponse);
+  rpc DotBvfsUpdate (bareos.director.commands.DotBvfsUpdateCommand) returns (ActionResponse);
+  rpc DotBvfsRestore (bareos.director.commands.DotBvfsRestoreCommand) returns (ActionResponse);
+  rpc DotBvfsCleanup (bareos.director.commands.DotBvfsCleanupCommand) returns (ActionResponse);
+  rpc DotBvfsClearCache (bareos.director.commands.DotBvfsClearCacheCommand) returns (ActionResponse);
+  rpc DotAclSet (bareos.director.commands.DotAclSetCommand) returns (ActionResponse);
+  rpc DotAclDelete (bareos.director.commands.DotAclDeleteCommand) returns (ActionResponse);
+  rpc DotAclClear (bareos.director.commands.DotAclClearCommand) returns (ActionResponse);
+  rpc DotAclCopy (bareos.director.commands.DotAclCopyCommand) returns (ActionResponse);
+  rpc DotProfileCreate (bareos.director.commands.DotProfileCreateCommand) returns (ActionResponse);
+  rpc DotProfileSet (bareos.director.commands.DotProfileSetCommand) returns (ActionResponse);
+  rpc DotProfileDelete (bareos.director.commands.DotProfileDeleteCommand) returns (ActionResponse);
+  rpc DotProfileAssign (bareos.director.commands.DotProfileAssignCommand) returns (ActionResponse);
+  rpc DotProfileUnassign (bareos.director.commands.DotProfileUnassignCommand) returns (ActionResponse);
+
+  // ------------------------------------------------------------------------
+  // Sitzungsbefehle (definiert; S-35). Sie steuern die Konsolensitzung und
+  // haben im typisierten API nur eingeschraenkte Bedeutung.
+  // ------------------------------------------------------------------------
+
+  // use catalog=<name>
+  rpc UseCatalog (bareos.director.commands.UseCommand) returns (ActionResponse);
+  // wait [jobid= | jobname= | ujobid= | mount] [timeout=]
+  rpc Wait (bareos.director.commands.WaitCommand) returns (ActionResponse);
+  rpc Gui (GuiSwitchCommand) returns (ActionResponse);
+  rpc Autodisplay (AutodisplaySwitchCommand) returns (ActionResponse);
+  rpc Automount (AutomountSwitchCommand) returns (ActionResponse);
+  // .api <mode> [compact=]
+  rpc DotApi (DotApiModeCommand) returns (ActionResponse);
+  rpc DotGrpc (bareos.director.commands.DotGrpcCommand) returns (ActionResponse);
+  // quit / exit / .quit: beendet die Sitzung (Session-Token wird ungueltig)
+  rpc Quit (bareos.director.commands.QuitCommand) returns (ActionResponse);
+  rpc Exit (bareos.director.commands.ExitCommand) returns (ActionResponse);
+  rpc DotQuit (bareos.director.commands.DotQuitCommand) returns (ActionResponse);
+
+  // ------------------------------------------------------------------------
+  // Interaktive Wiederherstellung: Dateiauswahl im Restore-Baum
+  // (definiert; S-35). StartRestoreSession baut den Baum auf, die
+  // RestoreTree*-RPCs entsprechen den Befehlen der Dateiauswahl
+  // (ua_tree.cc), RestoreTreeDone startet den Restore-Job.
+  // ------------------------------------------------------------------------
+
+  rpc StartRestoreSession (bareos.director.commands.RestoreCommand) returns (RestoreSessionResponse);
+  // cd <dir>
+  rpc RestoreTreeCd (RestoreTreePathCommand) returns (RestoreTreeListResponse);
+  // ls / .ls / dir / .dir [pattern]
+  rpc RestoreTreeLs (RestoreTreePathCommand) returns (RestoreTreeListResponse);
+  // .lsdir [pattern]: nur Verzeichnisse
+  rpc RestoreTreeLsDir (RestoreTreePathCommand) returns (RestoreTreeListResponse);
+  // lsmark / .lsmark [pattern]: nur markierte Eintraege
+  rpc RestoreTreeLsMark (RestoreTreePathCommand) returns (RestoreTreeListResponse);
+  // pwd / .pwd
+  rpc RestoreTreePwd (RestoreTreeSessionCommand) returns (RestoreTreeListResponse);
+  // mark / add <pattern>
+  rpc RestoreTreeMark (RestoreTreePathCommand) returns (RestoreTreeCountResponse);
+  // unmark / delete <pattern>
+  rpc RestoreTreeUnmark (RestoreTreePathCommand) returns (RestoreTreeCountResponse);
+  // markdir <pattern>
+  rpc RestoreTreeMarkDir (RestoreTreePathCommand) returns (RestoreTreeCountResponse);
+  // unmarkdir <pattern>
+  rpc RestoreTreeUnmarkDir (RestoreTreePathCommand) returns (RestoreTreeCountResponse);
+  // count
+  rpc RestoreTreeCount (RestoreTreeSessionCommand) returns (RestoreTreeCountResponse);
+  // find <pattern>
+  rpc RestoreTreeFind (RestoreTreePathCommand) returns (RestoreTreeListResponse);
+  // estimate
+  rpc RestoreTreeEstimate (RestoreTreeSessionCommand) returns (RestoreTreeCountResponse);
+  // help / .help / ?
+  rpc RestoreTreeHelp (RestoreTreeSessionCommand) returns (HelpResponse);
+  // done / exit: Auswahl abschliessen, Restore-Job starten
+  rpc RestoreTreeDone (RestoreTreeSessionCommand) returns (ActionResponse);
+  // abort / quit: Auswahl verwerfen
+  rpc RestoreTreeAbort (RestoreTreeSessionCommand) returns (ActionResponse);
+}
+
+// ==========================================================================
+// Enums
+// ==========================================================================
+
+// Job-Status (Job.JobStatus). Zahlenwert = ASCII-Code des Katalogzeichens.
+enum JobStatus {
+  JOB_STATUS_UNSPECIFIED = 0;
+  JOB_STATUS_CANCELED = 65;                 // 'A' Canceled by user
+  JOB_STATUS_BLOCKED = 66;                  // 'B' Blocked
+  JOB_STATUS_CREATED = 67;                  // 'C' Created, not yet running
+  JOB_STATUS_DIFFERENCES = 68;              // 'D' Verify found differences
+  JOB_STATUS_ERROR_TERMINATED = 69;         // 'E' Terminated with errors
+  JOB_STATUS_WAIT_FD = 70;                  // 'F' Waiting for Client
+  JOB_STATUS_INCOMPLETE = 73;               // 'I' Incomplete job
+  JOB_STATUS_DATA_COMMITTING = 76;          // 'L' Committing data
+  JOB_STATUS_WAIT_MOUNT = 77;               // 'M' Waiting for media mount
+  JOB_STATUS_RUNNING = 82;                  // 'R' Running
+  JOB_STATUS_WAIT_SD = 83;                  // 'S' Waiting for Storage daemon
+  JOB_STATUS_TERMINATED = 84;               // 'T' Completed successfully
+  JOB_STATUS_WARNINGS = 87;                 // 'W' Terminated with warnings
+  JOB_STATUS_ATTR_DESPOOLING = 97;          // 'a' SD despooling attributes
+  JOB_STATUS_WAIT_CLIENT_RES = 99;          // 'c' Waiting for client resource
+  JOB_STATUS_WAIT_MAX_JOBS = 100;           // 'd' Waiting on maximum jobs
+  JOB_STATUS_ERROR = 101;                   // 'e' Non-fatal error
+  JOB_STATUS_FATAL_ERROR = 102;             // 'f' Fatal error
+  JOB_STATUS_ATTR_INSERTING = 105;          // 'i' Doing batch insert file records
+  JOB_STATUS_WAIT_JOB_RES = 106;            // 'j' Waiting for job resource
+  JOB_STATUS_DATA_DESPOOLING = 108;         // 'l' Doing data despooling
+  JOB_STATUS_WAIT_MEDIA = 109;              // 'm' Waiting for new media
+  JOB_STATUS_WAIT_PRIORITY = 112;           // 'p' Waiting on higher priority jobs
+  JOB_STATUS_WAIT_DEVICE = 113;             // 'q' Queued waiting for device
+  JOB_STATUS_WAIT_STORE_RES = 115;          // 's' Waiting for storage resource
+  JOB_STATUS_WAIT_START_TIME = 116;         // 't' Waiting on start time
+}
+
+// Job-Typ (Job.Type). Zahlenwert = ASCII-Code des Katalogzeichens; die
+// Langform des Directors ("Backup", "Job Copy" ...) wird ebenfalls erkannt.
+enum JobType {
+  JOB_TYPE_UNSPECIFIED = 0;
+  JOB_TYPE_ARCHIVE = 65;                    // 'A'
+  JOB_TYPE_BACKUP = 66;                     // 'B'
+  JOB_TYPE_JOB_COPY = 67;                   // 'C' Kopie (Kopierziel)
+  JOB_TYPE_ADMIN = 68;                      // 'D'
+  JOB_TYPE_SYSTEM = 73;                     // 'I'
+  JOB_TYPE_MIGRATED_JOB = 77;               // 'M'
+  JOB_TYPE_CONSOLIDATE = 79;                // 'O'
+  JOB_TYPE_RESTORE = 82;                    // 'R'
+  JOB_TYPE_SCAN = 83;                       // 'S'
+  JOB_TYPE_CONSOLE = 85;                    // 'U'
+  JOB_TYPE_VERIFY = 86;                     // 'V'
+  JOB_TYPE_COPY = 99;                       // 'c' Copy-Job
+  JOB_TYPE_MIGRATE = 103;                   // 'g'
+}
+
+// Job-Level (Job.Level). Zahlenwert = ASCII-Code des Katalogzeichens; die
+// Langform ("Full", "VolumeToCatalog" ...) wird ebenfalls erkannt.
+enum JobLevel {
+  JOB_LEVEL_UNSPECIFIED = 0;
+  JOB_LEVEL_NONE = 32;                      // ' ' (Admin-, Restore-Jobs)
+  JOB_LEVEL_DATA = 65;                      // 'A'
+  JOB_LEVEL_BASE = 66;                      // 'B'
+  JOB_LEVEL_CATALOG = 67;                   // 'C'
+  JOB_LEVEL_DIFFERENTIAL = 68;              // 'D'
+  JOB_LEVEL_FULL = 70;                      // 'F'
+  JOB_LEVEL_INCREMENTAL = 73;               // 'I'
+  JOB_LEVEL_VOLUME_TO_CATALOG = 79;         // 'O'
+  JOB_LEVEL_SINCE = 83;                     // 'S'
+  JOB_LEVEL_INIT_CATALOG = 86;              // 'V'
+  JOB_LEVEL_DISK_TO_CATALOG = 100;          // 'd'
+  JOB_LEVEL_VIRTUAL_FULL = 102;             // 'f'
+}
+
+// Volume-Status (Media.VolStatus); erkannt am Namen ("Append", "Read-Only" ...)
+enum VolumeStatus {
+  VOLUME_STATUS_UNSPECIFIED = 0;
+  VOLUME_STATUS_APPEND = 1;
+  VOLUME_STATUS_FULL = 2;
+  VOLUME_STATUS_USED = 3;
+  VOLUME_STATUS_RECYCLE = 4;
+  VOLUME_STATUS_PURGED = 5;
+  VOLUME_STATUS_ERROR = 6;
+  VOLUME_STATUS_BUSY = 7;
+  VOLUME_STATUS_CLEANING = 8;
+  VOLUME_STATUS_ARCHIVE = 9;
+  VOLUME_STATUS_READ_ONLY = 10;
+  VOLUME_STATUS_DISABLED = 11;
+  VOLUME_STATUS_UNLABELED = 12;
+}
+
+// ==========================================================================
+// Requests: neue *Command-Messages (nur wo keine Message aus
+// director_commands.proto passt)
+// ==========================================================================
+
+// help [<command>]
+message HelpTopicCommand {
+  option (bareos.command_name) = "help";
+  option (bareos.help_text) = "Print help on specific command";
+  option (bareos.usage) = "help [<command>]";
+
+  string command = 1;    // Befehl (positional); leer = alle Befehle
+}
+
+// .help [all] [item=<command>] [full]
+message DotHelpTopicCommand {
+  option (bareos.command_name) = ".help";
+  option (bareos.help_text) = "Print parsable information about a command";
+  option (bareos.usage) = ".help [ all ] [ item=cmd ] [ full ]";
+
+  bool all = 1    [(bareos.bare_flag) = true];
+  string item = 2;
+  bool full = 3   [(bareos.bare_flag) = true];
+}
+
+// var <text>
+message VarExpandCommand {
+  option (bareos.command_name) = "var";
+  option (bareos.help_text) = "Does variable expansion";
+  option (bareos.usage) = "var <text>";
+
+  string text = 1 [(bareos.required) = true];  // positional
+}
+
+// resolve [client=<name> | storage=<name>] <hostname>
+message ResolveHostCommand {
+  option (bareos.command_name) = "resolve";
+  option (bareos.help_text) = "Resolve a hostname";
+  option (bareos.usage) = "resolve [client=<client-name> | storage=<storage-name>] <host-name>";
+
+  string client = 1;
+  string storage = 2;
+  string hostname = 3 [(bareos.required) = true];  // positional
+}
+
+// list jobs / list job=<name>
+message ListJobsCommand {
+  option (bareos.command_name) = "list jobs";
+  option (bareos.help_text) = "List jobs from catalog";
+  option (bareos.usage) = "list jobs [job=<job-name>] [client=<client-name>] "
+                          "[jobstatus=<status>] [jobtype=<jobtype>] "
+                          "[joblevel=<joblevel>] [volume=<volumename>] "
+                          "[pool=<pool>] [days=<number>] [hours=<number>] "
+                          "[last] [count] [limit=<number> [offset=<number>]]";
+  option (bareos.allowed_in_runscript) = true;
+  option (bareos.audit_event) = true;
+
+  string job = 1;
+  string client = 2;
+  string jobstatus = 3;
+  string jobtype = 4;
+  string joblevel = 5;
+  string volume = 6;
+  string pool = 7;
+  uint32 days = 8;
+  uint32 hours = 9;
+  bool last = 10    [(bareos.bare_flag) = true];
+  bool count = 11   [(bareos.bare_flag) = true];
+  uint32 limit = 12;
+  uint32 offset = 13;
+  bool llist = 14;  // Langform (llist)
+}
+
+// list jobid=<id> | list ujobid=<name>
+message ListJobidCommand {
+  option (bareos.command_name) = "list jobid";
+  option (bareos.help_text) = "List one job from catalog";
+  option (bareos.usage) = "list jobid=<jobid> | ujobid=<complete_name>";
+  option (bareos.allowed_in_runscript) = true;
+  option (bareos.audit_event) = true;
+
+  uint32 jobid = 1;
+  string ujobid = 2;
+  bool llist = 3;
+}
+
+// list backups client=<name> ...
+message ListBackupsCommand {
+  option (bareos.command_name) = "list backups";
+  option (bareos.help_text) = "List backups of a client";
+  option (bareos.usage) = "list backups client=<client-name> [fileset=<fileset-name>] "
+                          "[jobstatus=<status>] [level=<level>] [order=<asc|desc>] "
+                          "[limit=<number>] [days=<number>] [hours=<number>]";
+  option (bareos.allowed_in_runscript) = true;
+  option (bareos.audit_event) = true;
+
+  string client = 1 [(bareos.required) = true];
+  string fileset = 2;
+  string jobstatus = 3;
+  string level = 4;
+  string order = 5;
+  uint32 limit = 6;
+  uint32 days = 7;
+  uint32 hours = 8;
+  uint32 offset = 9;
+  bool llist = 10;
+}
+
+// list copies [jobid=<ids>]
+message ListCopiesCommand {
+  option (bareos.command_name) = "list copies";
+  option (bareos.help_text) = "List copy jobs";
+  option (bareos.usage) = "list copies [jobid=<jobid>]";
+  option (bareos.allowed_in_runscript) = true;
+  option (bareos.audit_event) = true;
+
+  string jobid = 1;  // JobId oder Liste "1,2,3"
+  bool llist = 2;
+}
+
+// list joblog jobid=<id> | ujobid=<name> [count]
+message ListJoblogCommand {
+  option (bareos.command_name) = "list joblog";
+  option (bareos.help_text) = "List the log of a job";
+  option (bareos.usage) = "list joblog jobid=<jobid> [count] | joblog ujobid=<complete_name> [count]";
+  option (bareos.allowed_in_runscript) = true;
+  option (bareos.audit_event) = true;
+
+  uint32 jobid = 1;
+  string ujobid = 2;
+  bool count = 3 [(bareos.bare_flag) = true];
+  bool llist = 4;
+}
+
+// list jobmedia jobid=<id> | ujobid=<name>
+message ListJobmediaCommand {
+  option (bareos.command_name) = "list jobmedia";
+  option (bareos.help_text) = "List the JobMedia records of a job";
+  option (bareos.usage) = "list jobmedia jobid=<jobid> | jobmedia ujobid=<complete_name>";
+  option (bareos.allowed_in_runscript) = true;
+  option (bareos.audit_event) = true;
+
+  uint32 jobid = 1;
+  string ujobid = 2;
+  bool llist = 3;
+}
+
+// list jobtotals
+message ListJobtotalsCommand {
+  option (bareos.command_name) = "list jobtotals";
+  option (bareos.help_text) = "List job totals per job name";
+  option (bareos.allowed_in_runscript) = true;
+  option (bareos.audit_event) = true;
+}
+
+// list jobstatistics jobid=<id>
+message ListJobstatisticsCommand {
+  option (bareos.command_name) = "list jobstatistics";
+  option (bareos.help_text) = "List the statistics samples of a job";
+  option (bareos.usage) = "list jobstatistics jobid=<jobid>";
+  option (bareos.allowed_in_runscript) = true;
+  option (bareos.audit_event) = true;
+
+  uint32 jobid = 1 [(bareos.required) = true];
+}
+
+// list files jobid=<id> | ujobid=<name>
+message ListFilesCommand {
+  option (bareos.command_name) = "list files";
+  option (bareos.help_text) = "List the files of a job";
+  option (bareos.usage) = "list files jobid=<jobid> | files ujobid=<complete_name>";
+  option (bareos.allowed_in_runscript) = true;
+  option (bareos.audit_event) = true;
+
+  uint32 jobid = 1;
+  string ujobid = 2;
+  uint32 limit = 3;
+  uint32 offset = 4;
+}
+
+// list basefiles jobid=<id> | ujobid=<name>
+message ListBasefilesCommand {
+  option (bareos.command_name) = "list basefiles";
+  option (bareos.help_text) = "List the base files of a job";
+  option (bareos.usage) = "list basefiles ( jobid=<jobid> | ujobid=<complete_name> )";
+  option (bareos.allowed_in_runscript) = true;
+  option (bareos.audit_event) = true;
+
+  uint32 jobid = 1;
+  string ujobid = 2;
+}
+
+// list log [client=<name>] [reverse]
+message ListLogCommand {
+  option (bareos.command_name) = "list log";
+  option (bareos.help_text) = "List the Log table";
+  option (bareos.usage) = "list log [client=<client-name>] [reverse] [limit=<number> [offset=<number>]]";
+  option (bareos.allowed_in_runscript) = true;
+  option (bareos.audit_event) = true;
+
+  string client = 1;
+  bool reverse = 2 [(bareos.bare_flag) = true];
+  uint32 limit = 3;
+  uint32 offset = 4;
+}
+
+// list volumes / list media
+message ListVolumesCommand {
+  option (bareos.command_name) = "list volumes";
+  option (bareos.help_text) = "List volumes";
+  option (bareos.usage) = "list volumes [ jobid=<jobid> | ujobid=<complete_name> | "
+                          "pool=<pool-name> | all ] [count] [limit=<number> [offset=<number>]]";
+  option (bareos.allowed_in_runscript) = true;
+  option (bareos.audit_event) = true;
+
+  uint32 jobid = 1;
+  string ujobid = 2;
+  string pool = 3;
+  bool all = 4     [(bareos.bare_flag) = true];
+  bool count = 5   [(bareos.bare_flag) = true];
+  uint32 limit = 6;
+  uint32 offset = 7;
+  bool llist = 8;
+}
+
+// list volume=<name> | volumeid=<id> | mediaid=<id> | media=<name>
+message ListVolumeCommand {
+  option (bareos.command_name) = "list volume";
+  option (bareos.help_text) = "List one volume";
+  option (bareos.usage) = "list volume=<volume-name> | volumeid=<volumeid> | "
+                          "mediaid=<volumeid> | media=<media-name>";
+  option (bareos.allowed_in_runscript) = true;
+  option (bareos.audit_event) = true;
+
+  string volume = 1;
+  uint32 volumeid = 2;
+  uint32 mediaid = 3;
+  string media = 4;
+  bool llist = 5;
+}
+
+// list pools | list pool=<name> | list poolid=<id>
+message ListPoolsCommand {
+  option (bareos.command_name) = "list pools";
+  option (bareos.help_text) = "List pools";
+  option (bareos.usage) = "list pools | pool=<pool-name> | poolid=<poolid>";
+  option (bareos.allowed_in_runscript) = true;
+  option (bareos.audit_event) = true;
+
+  string pool = 1;
+  uint32 poolid = 2;
+  bool llist = 3;
+}
+
+// list clients | list client=<name>
+message ListClientsCommand {
+  option (bareos.command_name) = "list clients";
+  option (bareos.help_text) = "List clients";
+  option (bareos.usage) = "list clients | client=<client-name>";
+  option (bareos.allowed_in_runscript) = true;
+  option (bareos.audit_event) = true;
+
+  string client = 1;
+  bool llist = 2;
+}
+
+// list filesets | list fileset [filesetid= | jobid= | ujobid=]
+message ListFilesetsCommand {
+  option (bareos.command_name) = "list filesets";
+  option (bareos.help_text) = "List filesets";
+  option (bareos.usage) = "list filesets | fileset [ filesetid=<filesetid> ] | "
+                          "fileset [ jobid=<jobid> ] | fileset [ ujobid=<complete_name> ]";
+  option (bareos.allowed_in_runscript) = true;
+  option (bareos.audit_event) = true;
+
+  uint32 filesetid = 1;
+  uint32 jobid = 2;
+  string ujobid = 3;
+  bool llist = 4;
+}
+
+// list storages
+message ListStoragesCommand {
+  option (bareos.command_name) = "list storages";
+  option (bareos.help_text) = "List storages";
+  option (bareos.allowed_in_runscript) = true;
+  option (bareos.audit_event) = true;
+
+  bool llist = 1;
+}
+
+// list nextvolume job=<name> [days=<n>]
+message ListNextvolumeCommand {
+  option (bareos.command_name) = "list nextvolume";
+  option (bareos.help_text) = "List the next volume a job will use";
+  option (bareos.usage) = "list nextvolume job=<job-name> [days=<number>]";
+  option (bareos.allowed_in_runscript) = true;
+  option (bareos.audit_event) = true;
+
+  string job = 1 [(bareos.required) = true];
+  uint32 days = 2;
+}
+
+// status scheduler / status schedule=<name>
+message StatusSchedulerCommand {
+  option (bareos.command_name) = "status scheduler";
+  option (bareos.help_text) = "Report scheduler status and preview";
+  option (bareos.usage) = "status scheduler [schedule=<schedule-name>] [client=<client-name>] "
+                          "[job=<job-name>] [days=<number>]";
+  option (bareos.audit_event) = true;
+
+  string schedule = 1;
+  string client = 2;
+  string job = 3;
+  uint32 days = 4;
+}
+
+// status storage=<name> [slots]
+message StatusStorageCommand {
+  option (bareos.command_name) = "status storage";
+  option (bareos.help_text) = "Report storage daemon status";
+  option (bareos.usage) = "status storage=<storage-name> [slots]";
+  option (bareos.audit_event) = true;
+
+  string storage = 1 [(bareos.required) = true];
+  bool slots = 2     [(bareos.bare_flag) = true];
+}
+
+// status subscriptions [clients] [plugins] [all] [anonymize] [client=<name>]
+message StatusSubscriptionsCommand {
+  option (bareos.command_name) = "status subscriptions";
+  option (bareos.help_text) = "Report subscription usage";
+  option (bareos.usage) = "status subscriptions [clients] [plugins] [all] [anonymize] [client=<client-name>]";
+  option (bareos.audit_event) = true;
+
+  bool clients = 1    [(bareos.bare_flag) = true];
+  bool plugins = 2    [(bareos.bare_flag) = true];
+  bool all = 3        [(bareos.bare_flag) = true];
+  bool anonymize = 4  [(bareos.bare_flag) = true];
+  string client = 5;
+}
+
+// status job=<name>
+message StatusJobCommand {
+  option (bareos.command_name) = "status job";
+  option (bareos.help_text) = "Report status of a running job";
+  option (bareos.usage) = "status job=<job-name>";
+  option (bareos.audit_event) = true;
+
+  string job = 1 [(bareos.required) = true];
+}
+
+// .status dir (current | last | header | scheduled | running | terminated)
+message DotStatusDirCommand {
+  option (bareos.command_name) = ".status dir";
+  option (bareos.help_text) = "Report director status";
+  option (bareos.usage) = ".status dir ( current | last | header | scheduled | running | terminated )";
+  option (bareos.audit_event) = true;
+
+  bool current = 1     [(bareos.bare_flag) = true];
+  bool last = 2        [(bareos.bare_flag) = true];
+  bool header = 3      [(bareos.bare_flag) = true];
+  bool scheduled = 4   [(bareos.bare_flag) = true];
+  bool running = 5     [(bareos.bare_flag) = true];
+  bool terminated = 6  [(bareos.bare_flag) = true];
+}
+
+// .status client=<name> [header | terminated | running]
+message DotStatusClientCommand {
+  option (bareos.command_name) = ".status client";
+  option (bareos.help_text) = "Report client status";
+  option (bareos.usage) = ".status client=<client> [ header | terminated | running ]";
+  option (bareos.audit_event) = true;
+
+  string client = 1 [(bareos.required) = true];
+  bool header = 2      [(bareos.bare_flag) = true];
+  bool terminated = 3  [(bareos.bare_flag) = true];
+  bool running = 4     [(bareos.bare_flag) = true];
+}
+
+// .status storage=<name> [header | waitreservation | devices | volumes | spooling | running | terminated]
+message DotStatusStorageCommand {
+  option (bareos.command_name) = ".status storage";
+  option (bareos.help_text) = "Report storage status";
+  option (bareos.usage) = ".status storage=<storage> [ header | waitreservation | devices | "
+                          "volumes | spooling | running | terminated ]";
+  option (bareos.audit_event) = true;
+
+  string storage = 1 [(bareos.required) = true];
+  bool header = 2           [(bareos.bare_flag) = true];
+  bool waitreservation = 3  [(bareos.bare_flag) = true];
+  bool devices = 4          [(bareos.bare_flag) = true];
+  bool volumes = 5          [(bareos.bare_flag) = true];
+  bool spooling = 6         [(bareos.bare_flag) = true];
+  bool running = 7          [(bareos.bare_flag) = true];
+  bool terminated = 8       [(bareos.bare_flag) = true];
+}
+
+// show users | show user=<name>
+message ShowUserCommand {
+  option (bareos.command_name) = "show users";
+  option (bareos.help_text) = "Show user resources";
+  option (bareos.allowed_in_runscript) = true;
+  option (bareos.audit_event) = true;
+
+  string user = 1;
+}
+
+// show counters | show counter=<name>
+message ShowCounterCommand {
+  option (bareos.command_name) = "show counters";
+  option (bareos.help_text) = "Show counter resources";
+  option (bareos.allowed_in_runscript) = true;
+  option (bareos.audit_event) = true;
+
+  string counter = 1;
+}
+
+// show all [verbose]
+message ShowAllCommand {
+  option (bareos.command_name) = "show all";
+  option (bareos.help_text) = "Show all resources";
+  option (bareos.usage) = "show all [verbose]";
+  option (bareos.allowed_in_runscript) = true;
+  option (bareos.audit_event) = true;
+
+  bool verbose = 1 [(bareos.bare_flag) = true];
+}
+
+// show disabled [clients | jobs | schedules]
+message ShowDisabledCommand {
+  option (bareos.command_name) = "show disabled";
+  option (bareos.help_text) = "Show disabled resources";
+  option (bareos.usage) = "show disabled [ clients | jobs | schedules ]";
+  option (bareos.allowed_in_runscript) = true;
+  option (bareos.audit_event) = true;
+
+  bool clients = 1    [(bareos.bare_flag) = true];
+  bool jobs = 2       [(bareos.bare_flag) = true];
+  bool schedules = 3  [(bareos.bare_flag) = true];
+}
+
+// .ovfs_status [refresh]
+message DotOvfsStatusCommand {
+  option (bareos.command_name) = ".ovfs_status";
+  option (bareos.help_text) = "Show whether restore trees use the ovfs extension or the Director fallback";
+  option (bareos.usage) = ".ovfs_status [refresh]";
+
+  bool refresh = 1 [(bareos.bare_flag) = true];
+}
+
+// .ovfs_latest client=<name> [fileset=<name>]
+message DotOvfsLatestCommand {
+  option (bareos.command_name) = ".ovfs_latest";
+  option (bareos.help_text) = "Job chain of a client's latest state (restore option 5)";
+  option (bareos.usage) = ".ovfs_latest client=<client-name> [fileset=<fileset-name>]";
+
+  string client = 1 [(bareos.required) = true];
+  string fileset = 2;
+}
+
+// .ovfs_tree (jobid=<list> | client=<name> [fileset=<name>]) [root=] [depth=] [max_entries=]
+message DotOvfsTreeCommand {
+  option (bareos.command_name) = ".ovfs_tree";
+  option (bareos.help_text) = "Restore tree of a job chain as JSON (OVFS)";
+  option (bareos.usage) = ".ovfs_tree jobid=<list> | client=<client-name> [fileset=<fileset-name>] "
+                          "[root=<dir>] [depth=<n>] [max_entries=<n>]";
+
+  string jobid = 1;       // JobId-Liste "1,2,3"
+  string client = 2;
+  string fileset = 3;
+  string root = 4;
+  uint32 depth = 5;
+  uint32 max_entries = 6;
+}
+
+// .ovfs_ls (jobid=<list> | client=<name> [fileset=<name>]) path=<dir>
+message DotOvfsLsCommand {
+  option (bareos.command_name) = ".ovfs_ls";
+  option (bareos.help_text) = "Direct children of one directory of a job chain (OVFS)";
+  option (bareos.usage) = ".ovfs_ls jobid=<list> | client=<client-name> [fileset=<fileset-name>] path=<dir>";
+
+  string jobid = 1;
+  string client = 2;
+  string fileset = 3;
+  string path = 4 [(bareos.required) = true];
+}
+
+// .ovfs_versions client=<name> path=<dir> [name=<file>] [copies]
+message DotOvfsVersionsCommand {
+  option (bareos.command_name) = ".ovfs_versions";
+  option (bareos.help_text) = "All versions of one file of a client (OVFS)";
+  option (bareos.usage) = ".ovfs_versions client=<client-name> path=<dir> [name=<file>] [copies]";
+
+  string client = 1 [(bareos.required) = true];
+  string path = 2   [(bareos.required) = true];
+  string name = 3;
+  bool copies = 4   [(bareos.bare_flag) = true];
+}
+
+// prune volume [=<name>] [all] [pool=<name>] [yes]
+message PruneVolumeCommand {
+  option (bareos.command_name) = "prune volume";
+  option (bareos.help_text) = "Prune a volume";
+  option (bareos.usage) = "prune volume [all] [=volume] [pool=<pool>] [yes]";
+  option (bareos.allowed_in_runscript) = true;
+  option (bareos.audit_event) = true;
+
+  string volume = 1;
+  bool all = 2     [(bareos.bare_flag) = true];
+  string pool = 3;
+  bool yes = 4     [(bareos.bare_flag) = true];
+}
+
+// prune directory [=<dir>] [client=<name>] [recursive] [yes]
+message PruneDirectoryCommand {
+  option (bareos.command_name) = "prune directory";
+  option (bareos.help_text) = "Prune a directory";
+  option (bareos.usage) = "prune directory [=directory] [client=<client>] [recursive] [yes]";
+  option (bareos.allowed_in_runscript) = true;
+  option (bareos.audit_event) = true;
+
+  string directory = 1;
+  string client = 2;
+  bool recursive = 3  [(bareos.bare_flag) = true];
+  bool yes = 4        [(bareos.bare_flag) = true];
+}
+
+// update slots [storage=<name>] [scan] [drive=<n>]
+message UpdateSlotsCommand {
+  option (bareos.command_name) = "update slots";
+  option (bareos.help_text) = "Update slots from the autochanger";
+  option (bareos.usage) = "update slots [storage=<storage-name>] [scan] [drive=<drivenum>]";
+  option (bareos.allowed_in_runscript) = true;
+  option (bareos.audit_event) = true;
+
+  string storage = 1;
+  bool scan = 2    [(bareos.bare_flag) = true];
+  int32 drive = 3;
+}
+
+// trace on | off
+message TraceSwitchCommand {
+  option (bareos.command_name) = "trace";
+  option (bareos.help_text) = "Turn on/off trace to file";
+  option (bareos.usage) = "trace on | off";
+  option (bareos.allowed_in_runscript) = true;
+  option (bareos.audit_event) = true;
+
+  bool on = 1   [(bareos.bare_flag) = true];
+  bool off = 2  [(bareos.bare_flag) = true];
+}
+
+// gui on | off
+message GuiSwitchCommand {
+  option (bareos.command_name) = "gui";
+  option (bareos.help_text) = "Switch between interactive (gui off) and non-interactive (gui on) mode";
+  option (bareos.usage) = "gui on | off";
+
+  bool on = 1   [(bareos.bare_flag) = true];
+  bool off = 2  [(bareos.bare_flag) = true];
+}
+
+// autodisplay on | off
+message AutodisplaySwitchCommand {
+  option (bareos.command_name) = "autodisplay";
+  option (bareos.help_text) = "Autodisplay console messages";
+  option (bareos.usage) = "autodisplay on | off";
+
+  bool on = 1   [(bareos.bare_flag) = true];
+  bool off = 2  [(bareos.bare_flag) = true];
+}
+
+// automount on | off
+message AutomountSwitchCommand {
+  option (bareos.command_name) = "automount";
+  option (bareos.help_text) = "Automount after label";
+  option (bareos.usage) = "automount on | off";
+  option (bareos.audit_event) = true;
+
+  bool on = 1   [(bareos.bare_flag) = true];
+  bool off = 2  [(bareos.bare_flag) = true];
+}
+
+// .api [0 | 1 | 2 | off | on | json] [compact=<yes|no>]
+message DotApiModeCommand {
+  option (bareos.command_name) = ".api";
+  option (bareos.help_text) = "Switch between different api modes";
+  option (bareos.usage) = ".api [ 0 | 1 | 2 | off | on | json ] [compact=<yes|no>]";
+
+  string mode = 1;     // positional
+  string compact = 2;
+}
+
+// query: vordefinierte Abfrage aus der QueryFile
+message QueryRunCommand {
+  option (bareos.command_name) = "query";
+  option (bareos.help_text) = "Query catalog";
+  option (bareos.audit_event) = true;
+
+  uint32 number = 1 [(bareos.required) = true];  // Nummer der Abfrage
+  repeated string parameters = 2;                // Antworten auf die Rueckfragen
+}
+
+// Dateiauswahl einer Restore-Sitzung ohne Pfad (pwd, count, estimate,
+// help, done, abort)
+message RestoreTreeSessionCommand {
+  option (bareos.command_name) = "restore tree";
+  option (bareos.help_text) = "Restore file selection command";
+
+  string session_id = 1 [(bareos.required) = true];  // aus StartRestoreSession
+}
+
+// Dateiauswahl einer Restore-Sitzung mit Pfad/Muster (cd, ls, mark, find ...)
+message RestoreTreePathCommand {
+  option (bareos.command_name) = "restore tree";
+  option (bareos.help_text) = "Restore file selection command";
+
+  string session_id = 1 [(bareos.required) = true];
+  string path = 2;  // Verzeichnis oder Muster (Wildcards erlaubt)
+}
+
+// ==========================================================================
+// Gemeinsame Ergebnis-Messages
+// ==========================================================================
+
+// Paging-Angaben (JSON "meta": {"range": {...}}) bei limit/offset und
+// wenn die Konsolen-ACL Zeilen ausgefiltert hat
+message RangeInfo {
+  uint32 limit = 1;
+  optional uint32 offset = 2;
+  uint64 filtered = 3;           // durch ACL ausgefilterte Zeilen
+}
+
+message MetaInfo {
+  RangeInfo range = 1;
+}
+
+// Antwort fuer Befehle, die nur Text liefern (keine API-2-Struktur)
+message TextResponse {
+  string text = 1;               // Ausgabe wie in der Konsole
+}
+
+// Antwort der schreibenden Befehle (S-35)
+message ActionResponse {
+  bool success = 1;
+  string text = 2;                         // Ausgabe wie in der Konsole
+  repeated string errors = 3;
+  repeated string warnings = 4;
+  repeated uint32 jobids = 5;              // gestartete/betroffene Jobs
+  google.protobuf.Struct result = 6;       // API-2-Ergebnis, falls vorhanden
+}
+
+// Name eines Eintrags (Punkt-Auflistungen)
+message NameInfo {
+  string name = 1;
+  optional bool enabled = 2;     // nur bei Ressourcen mit Enabled-Status
+  map<string, string> extra_fields = 100;
+}
+
+message NameListResponse {
+  repeated NameInfo items = 1;
+}
+
+// ==========================================================================
+// Info, Hilfe
+// ==========================================================================
+
+message VersionInfo {
+  string name = 1;
+  string type = 2;
+  string version = 3;
+  string bdate = 4;
+  string operatingsystem = 5;
+  string distname = 6;
+  string distversion = 7;
+  string customversionid = 8;
+  map<string, string> extra_fields = 100;
+}
+
+message VersionResponse {
+  VersionInfo version = 1;
+}
+
+message TimeInfo {
+  string full = 1;               // "Sat 17-Oct-2026 17:45:28"
+  uint32 year = 2;
+  uint32 month = 3;
+  uint32 day = 4;
+  uint32 hour = 5;
+  uint32 minute = 6;
+  uint32 second = 7;
+  map<string, string> extra_fields = 100;
+}
+
+message TimeResponse {
+  TimeInfo time = 1;
+}
+
+message WhoamiResponse {
+  string whoami = 1;
+}
+
+// Kopf von "status dir"
+message DirectorHeaderInfo {
+  string director = 1;
+  string version = 2;
+  string release_date = 3;
+  string os = 4;
+  string binary_info = 5;
+  string daemon_started = 6;     // "17-Oct-26 17:45"
+  uint32 jobs_run = 7;
+  uint32 jobs_running = 8;
+  bool config_warnings = 9;
+  map<string, string> extra_fields = 100;
+}
+
+message MemoryResponse {
+  DirectorHeaderInfo header = 1;
+  string text = 2;
+}
+
+message NoopResponse {}
+
+message HelpInfo {
+  string command = 1;
+  string description = 2;
+  string arguments = 3;
+  bool permission = 4;           // Befehl fuer diese Konsole erlaubt
+  map<string, string> extra_fields = 100;
+}
+
+message HelpResponse {
+  map<string, HelpInfo> commands = 1;  // Schluessel: Befehlsname
+  string text = 2;                     // Restore-Baum: Hilfetext
+}
+
+message MessagesResponse {
+  string text = 1;               // wartende Meldungen
+}
+
+// ==========================================================================
+// list / llist
+// ==========================================================================
+
+// Job-Datensatz (list/llist jobs, backups, jobid). list liefert die
+// Kurzform, llist alle Spalten.
+message JobInfo {
+  uint32 jobid = 1;
+  string job = 2;                // eindeutiger Jobname
+  string name = 3;
+  bool purgedfiles = 4;
+  JobType type = 5;
+  JobLevel level = 6;
+  uint32 clientid = 7;
+  string client = 8;
+  JobStatus jobstatus = 9;
+  string schedtime = 10;
+  string starttime = 11;
+  string endtime = 12;
+  string realendtime = 13;
+  string duration = 14;          // "HH:MM:SS"
+  int64 jobtdate = 15;           // unix timestamp
+  uint32 volsessionid = 16;
+  uint32 volsessiontime = 17;
+  uint64 jobfiles = 18;
+  uint64 jobbytes = 19;
+  uint32 joberrors = 20;
+  uint32 jobmissingfiles = 21;
+  uint32 poolid = 22;
+  string poolname = 23;
+  uint32 priorjobid = 24;
+  uint32 filesetid = 25;
+  string fileset = 26;
+  map<string, string> extra_fields = 100;
+}
+
+message ListJobsResponse {
+  repeated JobInfo jobs = 1;
+  MetaInfo meta = 2;
+  optional uint64 count = 3;     // bei "count"
+}
+
+// list copies
+message CopyInfo {
+  uint32 jobid = 1;              // Original-Job
+  string job = 2;
+  uint32 copyjobid = 3;          // Kopie
+  string mediatype = 4;
+  map<string, string> extra_fields = 100;
+}
+
+message ListCopiesResponse {
+  repeated CopyInfo copies = 1;
+  MetaInfo meta = 2;
+}
+
+// Log-Eintrag (list joblog, list log)
+message LogEntryInfo {
+  uint32 logid = 1;
+  string jobname = 2;
+  string clientname = 3;
+  string time = 4;
+  string logtext = 5;
+  map<string, string> extra_fields = 100;
+}
+
+message ListJobLogResponse {
+  repeated LogEntryInfo joblog = 1;
+  optional uint64 count = 2;
+  MetaInfo meta = 3;
+}
+
+message ListLogResponse {
+  repeated LogEntryInfo log = 1;
+  MetaInfo meta = 2;
+}
+
+message JobMediaInfo {
+  uint32 jobmediaid = 1;
+  uint32 jobid = 2;
+  uint32 mediaid = 3;
+  string volumename = 4;
+  uint32 firstindex = 5;
+  uint32 lastindex = 6;
+  uint32 startfile = 7;
+  uint32 endfile = 8;
+  uint64 startblock = 9;
+  uint64 endblock = 10;
+  map<string, string> extra_fields = 100;
+}
+
+message ListJobMediaResponse {
+  repeated JobMediaInfo jobmedia = 1;
+  MetaInfo meta = 2;
+}
+
+message JobTotalsInfo {
+  string job = 1;                // leer in der Gesamtsumme
+  uint64 jobs = 2;
+  uint64 files = 3;
+  uint64 bytes = 4;
+  map<string, string> extra_fields = 100;
+}
+
+message ListJobTotalsResponse {
+  repeated JobTotalsInfo jobs = 1;   // je Jobname
+  JobTotalsInfo jobtotals = 2;       // Gesamtsumme
+  MetaInfo meta = 3;
+}
+
+message JobStatisticsInfo {
+  uint32 deviceid = 1;
+  string sampletime = 2;
+  uint32 jobid = 3;
+  uint64 jobfiles = 4;
+  uint64 jobbytes = 5;
+  map<string, string> extra_fields = 100;
+}
+
+message ListJobStatisticsResponse {
+  repeated JobStatisticsInfo jobstats = 1;
+  MetaInfo meta = 2;
+}
+
+message FileNameInfo {
+  string filename = 1;           // Pfad + Name
+  map<string, string> extra_fields = 100;
+}
+
+message ListFilesResponse {
+  repeated FileNameInfo filenames = 1;
+  MetaInfo meta = 2;
+}
+
+// Volume-Datensatz (Media); list liefert die Kurzform, llist alle Spalten
+message VolumeInfo {
+  uint32 mediaid = 1;
+  string volumename = 2;
+  int32 slot = 3;
+  uint32 poolid = 4;
+  string pool = 5;
+  string mediatype = 6;
+  string firstwritten = 7;
+  string lastwritten = 8;
+  string labeldate = 9;
+  uint32 voljobs = 10;
+  uint32 volfiles = 11;
+  uint32 volblocks = 12;
+  uint32 volmounts = 13;
+  uint64 volbytes = 14;
+  uint32 volerrors = 15;
+  uint32 volwrites = 16;
+  uint64 volcapacitybytes = 17;
+  VolumeStatus volstatus = 18;
+  uint32 enabled = 19;           // 0 = nein, 1 = ja, 2 = archiviert
+  bool recycle = 20;
+  uint64 volretention = 21;      // Sekunden
+  uint64 voluseduration = 22;    // Sekunden
+  uint32 maxvoljobs = 23;
+  uint32 maxvolfiles = 24;
+  uint64 maxvolbytes = 25;
+  bool inchanger = 26;
+  uint32 endfile = 27;
+  uint64 endblock = 28;
+  uint32 labeltype = 29;
+  uint32 storageid = 30;
+  uint32 deviceid = 31;
+  uint32 locationid = 32;
+  uint32 recyclecount = 33;
+  string initialwrite = 34;
+  uint32 scratchpoolid = 35;
+  string scratchpool = 36;
+  uint32 recyclepoolid = 37;
+  string recyclepool = 38;
+  bool hasencryptionkey = 39;
+  string comment = 40;
+  string storage = 41;
+  uint32 jobmediaid = 42;        // list volumes jobid=
+  uint32 jobid = 43;             // list volumes jobid=
+  map<string, string> extra_fields = 100;
+}
+
+// Volumes eines Pools
+message VolumeInfoList {
+  repeated VolumeInfo volumes = 1;
+  optional uint64 count = 2;     // bei "count"
+}
+
+message ListVolumesResponse {
+  repeated VolumeInfo volumes = 1;         // mit jobid/ujobid-Filter
+  map<string, VolumeInfoList> pools = 2;   // sonst: je Poolname
+  MetaInfo meta = 3;
+}
+
+message GetVolumeResponse {
+  VolumeInfo volume = 1;
+  MetaInfo meta = 2;
+}
+
+message PoolInfo {
+  uint32 poolid = 1;
+  string name = 2;
+  uint32 numvols = 3;
+  uint32 maxvols = 4;
+  bool useonce = 5;
+  bool usecatalog = 6;
+  bool acceptanyvolume = 7;
+  uint64 volretention = 8;
+  uint64 voluseduration = 9;
+  uint32 maxvoljobs = 10;
+  uint64 maxvolbytes = 11;
+  bool autoprune = 12;
+  bool recycle = 13;
+  string pooltype = 14;
+  string labelformat = 15;
+  bool enabled = 16;
+  uint32 scratchpoolid = 17;
+  uint32 recyclepoolid = 18;
+  uint32 labeltype = 19;
+  uint32 prunablevolumes = 20;
+  uint32 prunablejobs = 21;
+  uint64 prunablebytes = 22;
+  string reason = 23;
+  map<string, string> extra_fields = 100;
+}
+
+message ListPoolsResponse {
+  repeated PoolInfo pools = 1;
+  MetaInfo meta = 2;
+}
+
+message ClientInfo {
+  uint32 clientid = 1;
+  string name = 2;
+  string uname = 3;
+  bool autoprune = 4;
+  uint64 fileretention = 5;      // Sekunden
+  uint64 jobretention = 6;       // Sekunden
+  map<string, string> extra_fields = 100;
+}
+
+message ListClientsResponse {
+  repeated ClientInfo clients = 1;
+  MetaInfo meta = 2;
+}
+
+message FilesetInfo {
+  uint32 filesetid = 1;
+  string fileset = 2;
+  string md5 = 3;
+  string createtime = 4;
+  string filesettext = 5;
+  map<string, string> extra_fields = 100;
+}
+
+message ListFilesetsResponse {
+  repeated FilesetInfo filesets = 1;
+  MetaInfo meta = 2;
+}
+
+message StorageInfo {
+  uint32 storageid = 1;
+  string name = 2;
+  bool autochanger = 3;
+  map<string, string> extra_fields = 100;
+}
+
+message ListStoragesResponse {
+  repeated StorageInfo storages = 1;
+  MetaInfo meta = 2;
+}
+
+message NextVolumeInfo {
+  string job = 1;
+  string pool = 2;
+  string level = 3;
+  string volume = 4;
+}
+
+message NextVolumeResponse {
+  repeated NextVolumeInfo volumes = 1;  // aus dem Text gelesen
+  string text = 2;
+}
+
+// ==========================================================================
+// status
+// ==========================================================================
+
+message ScheduledJobInfo {
+  string name = 1;
+  JobType type = 2;
+  JobLevel level = 3;
+  uint32 priority = 4;
+  string scheduled = 5;          // "17-Oct-26 21:00"
+  string volume = 6;
+  string pool = 7;
+  string storage = 8;
+  map<string, string> extra_fields = 100;
+}
+
+message RunningJobInfo {
+  uint32 jobid = 1;
+  string name = 2;               // eindeutiger Jobname
+  JobLevel level = 3;
+  JobType type = 4;
+  string status = 5;             // Statustext
+  uint64 files = 6;
+  uint64 bytes = 7;
+  map<string, string> extra_fields = 100;
+}
+
+message TerminatedJobInfo {
+  uint32 jobid = 1;
+  string name = 2;
+  JobLevel level = 3;
+  JobType type = 4;
+  string status = 5;             // "OK", "Error" ...
+  uint64 files = 6;
+  uint64 bytes = 7;
+  string finished = 8;
+  map<string, string> extra_fields = 100;
+}
+
+message ClientConnectionInfo {
+  string connecttime = 1;
+  int32 protocol_version = 2;
+  bool authenticated = 3;
+  string name = 4;
+  map<string, string> extra_fields = 100;
+}
+
+message DirectorStatusResponse {
+  DirectorHeaderInfo header = 1;
+  repeated ScheduledJobInfo scheduled = 2;
+  repeated RunningJobInfo running = 3;
+  repeated TerminatedJobInfo terminated = 4;
+  repeated ClientConnectionInfo client_connection = 5;
+  string text = 6;               // nur Textanteile (z.B. status all)
+}
+
+message ScheduleJobInfo {
+  string name = 1;
+  bool enabled = 2;
+}
+
+message ScheduleStatusInfo {
+  string name = 1;
+  bool enabled = 2;
+  repeated ScheduleJobInfo jobs = 3;
+  map<string, string> extra_fields = 100;
+}
+
+message SchedulePreviewInfo {
+  string datetime = 1;           // "Sun 18-Oct-2026 12:45"
+  int64 runtime = 2;             // unix timestamp
+  string schedule = 3;
+  JobLevel level = 4;
+  uint32 priority = 5;
+  string pool = 6;
+  string storage = 7;
+  string messages = 8;
+  bool spool_data = 9;
+  bool accurate = 10;
+  map<string, string> extra_fields = 100;
+}
+
+message SchedulerStatusResponse {
+  repeated ScheduleStatusInfo schedules = 1;
+  repeated SchedulePreviewInfo preview = 2;
+}
+
+message ClientStatusResponse {
+  string text = 1;               // Statusbericht des File Daemons
+}
+
+// Slot eines Autochangers (status storage=<name> slots)
+message SlotInfo {
+  string type = 1;               // "drive", "slot", "import_slot"
+  uint32 slotnr = 2;
+  string content = 3;            // "full", "empty"
+  uint32 loaded = 4;
+  string volname = 5;
+  uint32 mr_slotnr = 6;
+  string mr_volname = 7;
+  uint64 mr_volbytes = 8;
+  string mr_volstatus = 9;
+  string mr_mediatype = 10;
+  string pr_name = 11;
+  int64 mr_lastwritten = 12;
+  int64 mr_expire = 13;
+  map<string, string> extra_fields = 100;
+}
+
+message StorageStatusResponse {
+  string text = 1;               // Statusbericht des Storage Daemons
+  repeated SlotInfo contents = 2;
+}
+
+message SubscriptionUnitInfo {
+  string client = 1;
+  string plugin = 2;
+  uint64 count = 3;
+  double size_gb = 4;
+  map<string, string> extra_fields = 100;
+}
+
+message SubscriptionSummaryInfo {
+  string accounting_mode = 1;
+  int64 used = 2;
+  int64 configured = 3;
+  int64 remaining = 4;
+  map<string, string> extra_fields = 100;
+}
+
+message SubscriptionsResponse {
+  string version = 1;
+  string os = 2;
+  string binary_info = 3;
+  string report_time = 4;
+  repeated SubscriptionUnitInfo unit_detail = 5;
+  SubscriptionSummaryInfo unit_summary = 6;
+  string checksum = 7;
+  map<string, string> extra_fields = 100;
+}
+
+// ==========================================================================
+// show: typisierte Felder je Ressourcentyp plus alle Direktiven als
+// google.protobuf.Struct (Schluessel wie in "show" mit ".api 2")
+// ==========================================================================
+
+message DirectorResourceInfo {
+  string name = 1;
+  string description = 2;
+  string messages = 3;
+  uint32 maximumconcurrentjobs = 4;
+  bool auditing = 5;
+  string workingdirectory = 6;
+  google.protobuf.Struct directives = 99;
+}
+
+message ClientResourceInfo {
+  string name = 1;
+  string description = 2;
+  string address = 3;
+  uint32 fdport = 4;
+  string protocol = 5;
+  bool enabled = 6;
+  string catalog = 7;
+  uint32 maximumconcurrentjobs = 8;
+  google.protobuf.Struct directives = 99;
+}
+
+// Job und JobDefs
+message JobResourceInfo {
+  string name = 1;
+  string description = 2;
+  JobType type = 3;
+  JobLevel level = 4;
+  string client = 5;
+  string fileset = 6;
+  string pool = 7;
+  repeated string storage = 8;
+  string schedule = 9;
+  string messages = 10;
+  string jobdefs = 11;
+  bool enabled = 12;
+  uint32 priority = 13;
+  uint32 maximumconcurrentjobs = 14;
+  string where = 15;
+  google.protobuf.Struct directives = 99;
+}
+
+message StorageResourceInfo {
+  string name = 1;
+  string description = 2;
+  string address = 3;
+  uint32 sdport = 4;
+  repeated string device = 5;
+  string mediatype = 6;
+  bool autochanger = 7;
+  bool enabled = 8;
+  uint32 maximumconcurrentjobs = 9;
+  google.protobuf.Struct directives = 99;
+}
+
+message CatalogResourceInfo {
+  string name = 1;
+  string description = 2;
+  string dbname = 3;
+  string dbuser = 4;
+  string dbaddress = 5;
+  uint32 dbport = 6;
+  google.protobuf.Struct directives = 99;
+}
+
+message ScheduleResourceInfo {
+  string name = 1;
+  string description = 2;
+  repeated string run = 3;
+  bool enabled = 4;
+  google.protobuf.Struct directives = 99;
+}
+
+message PoolResourceInfo {
+  string name = 1;
+  string description = 2;
+  string pooltype = 3;
+  string labelformat = 4;
+  uint32 maximumvolumes = 5;
+  repeated string storage = 6;
+  string recyclepool = 7;
+  string volumeretention = 8;    // wie konfiguriert, z.B. "1 months "
+  string maximumvolumebytes = 9; // wie konfiguriert, z.B. "50 g"
+  google.protobuf.Struct directives = 99;
+}
+
+// Console, Profile und User
+message ConsoleResourceInfo {
+  string name = 1;
+  string description = 2;
+  repeated string profile = 3;
+  repeated string jobacl = 4;
+  repeated string clientacl = 5;
+  repeated string storageacl = 6;
+  repeated string scheduleacl = 7;
+  repeated string poolacl = 8;
+  repeated string commandacl = 9;
+  repeated string filesetacl = 10;
+  repeated string catalogacl = 11;
+  repeated string whereacl = 12;
+  repeated string pluginoptionsacl = 13;
+  google.protobuf.Struct directives = 99;
+}
+
+// FileSet, Messages, Counter: nur Name/Beschreibung typisiert
+message GenericResourceInfo {
+  string name = 1;
+  string description = 2;
+  google.protobuf.Struct directives = 99;
+}
+
+message ShowResponse {
+  map<string, DirectorResourceInfo> directors = 1;
+  map<string, ClientResourceInfo> clients = 2;
+  map<string, JobResourceInfo> jobdefs = 3;
+  map<string, JobResourceInfo> jobs = 4;
+  map<string, StorageResourceInfo> storages = 5;
+  map<string, CatalogResourceInfo> catalogs = 6;
+  map<string, ScheduleResourceInfo> schedules = 7;
+  map<string, GenericResourceInfo> filesets = 8;
+  map<string, PoolResourceInfo> pools = 9;
+  map<string, GenericResourceInfo> messages = 10;
+  map<string, ConsoleResourceInfo> consoles = 11;
+  map<string, ConsoleResourceInfo> profiles = 12;
+  map<string, ConsoleResourceInfo> users = 13;
+  map<string, GenericResourceInfo> counters = 14;
+  string text = 15;              // Ressourcen ohne API-2-Ausgabe
+}
+
+message DisabledInfo {
+  repeated string jobs = 1;
+  repeated string clients = 2;
+  repeated string schedules = 3;
+}
+
+message ShowDisabledResponse {
+  DisabledInfo disabled = 1;
+}
+
+// ==========================================================================
+// Punkt-Befehle
+// ==========================================================================
+
+message LevelInfo {
+  string name = 1;
+  JobLevel level = 2;
+  JobType jobtype = 3;
+  map<string, string> extra_fields = 100;
+}
+
+message LevelListResponse {
+  repeated LevelInfo levels = 1;
+}
+
+message JobStatusInfo {
+  JobStatus jobstatus = 1;
+  string jobstatuslong = 2;
+  uint32 severity = 3;
+  uint32 exitlevel = 4;
+  string exitstatus = 5;
+  map<string, string> extra_fields = 100;
+}
+
+message JobStatusListResponse {
+  repeated JobStatusInfo jobstatus = 1;
+}
+
+// .defaults job=|client=|storage=|pool=
+message DefaultsInfo {
+  string job = 1;
+  string pool = 2;
+  string messages = 3;
+  string client = 4;
+  string storage = 5;
+  string where = 6;
+  JobLevel level = 7;
+  JobType type = 8;
+  string fileset = 9;
+  bool enabled = 10;
+  string catalog = 11;
+  map<string, string> extra_fields = 100;
+}
+
+message DefaultsResponse {
+  DefaultsInfo defaults = 1;
+}
+
+message AuthorizedInfo {
+  bool authorized = 1;
+}
+
+message AuthorizedResponse {
+  AuthorizedInfo authorized = 1;
+}
+
+message SqlTableInfo {
+  string tablename = 1;
+  optional uint64 count = 2;     // nur .sqlcount
+  map<string, string> extra_fields = 100;
+}
+
+message SqlTablesResponse {
+  repeated SqlTableInfo sqltables = 1;
+  repeated SqlTableInfo sqlcount = 2;
+}
+
+message SqlColumnInfo {
+  string table_name = 1;
+  string column_name = 2;
+  string data_type = 3;
+  map<string, string> extra_fields = 100;
+}
+
+message SqlSchemaResponse {
+  repeated SqlColumnInfo sqlschema = 1;
+}
+
+// Ergebniszeile einer SQL-Abfrage: Spaltenname -> Wert
+message SqlRowInfo {
+  map<string, string> extra_fields = 100;
+}
+
+message SqlQueryResponse {
+  repeated SqlRowInfo query = 1;
+  string text = 2;
+}
+
+message AclEntryInfo {
+  string value = 1;
+  string source = 2;             // Herkunft, z.B. "Profile operator"
+}
+
+message ConsoleAclInfo {
+  string console = 1;
+  repeated string profiles = 2;
+  repeated AclEntryInfo jobacl = 3;
+  repeated AclEntryInfo clientacl = 4;
+  repeated AclEntryInfo storageacl = 5;
+  repeated AclEntryInfo scheduleacl = 6;
+  repeated AclEntryInfo poolacl = 7;
+  repeated AclEntryInfo commandacl = 8;
+  repeated AclEntryInfo filesetacl = 9;
+  repeated AclEntryInfo catalogacl = 10;
+  repeated AclEntryInfo whereacl = 11;
+  repeated AclEntryInfo pluginoptionsacl = 12;
+  map<string, string> extra_fields = 100;
+}
+
+message AclListResponse {
+  repeated ConsoleAclInfo acl = 1;
+}
+
+// ==========================================================================
+// BVFS / OVFS
+// ==========================================================================
+
+message BvfsJobIdInfo {
+  uint32 id = 1;
+}
+
+message BvfsJobIdsResponse {
+  repeated BvfsJobIdInfo jobids = 1;
+}
+
+// stat-Struktur (aus LStat dekodiert)
+message BvfsStatInfo {
+  uint64 dev = 1;
+  uint64 ino = 2;
+  uint32 mode = 3;
+  uint32 nlink = 4;
+  uint32 uid = 5;
+  uint32 gid = 6;
+  string user = 7;
+  string group = 8;
+  uint64 rdev = 9;
+  uint64 size = 10;
+  int64 atime = 11;
+  int64 mtime = 12;
+  int64 ctime = 13;
+  map<string, string> extra_fields = 100;
+}
+
+message BvfsEntryInfo {
+  string type = 1;               // "D" Verzeichnis, "F" Datei, "V" Version
+  uint64 pathid = 2;
+  uint64 fileid = 3;
+  uint32 jobid = 4;
+  string lstat = 5;
+  string name = 6;
+  string fullpath = 7;
+  string md5 = 8;
+  string volumename = 9;
+  bool volumeinchanger = 10;
+  BvfsStatInfo stat = 11;
+  uint32 linkfileindex = 12;
+  map<string, string> extra_fields = 100;
+}
+
+message BvfsListResponse {
+  repeated BvfsEntryInfo directories = 1;
+  repeated BvfsEntryInfo files = 2;
+  repeated BvfsEntryInfo versions = 3;
+}
+
+message OvfsStatusInfo {
+  string state = 1;
+  bool installed = 2;
+  bool usable = 3;
+  optional string version = 4;
+  string path = 5;               // "ovfs" oder "fallback"
+  optional string schema = 6;
+  optional string reason = 7;
+  map<string, string> extra_fields = 100;
+}
+
+message OvfsStatusResponse {
+  OvfsStatusInfo ovfs = 1;
+}
+
+message OvfsLatestResponse {
+  string path = 1;
+  string client = 2;
+  repeated uint32 jobids = 3;
+}
+
+message OvfsTreeResponse {
+  string path = 1;
+  repeated uint32 jobids = 2;
+  string root = 3;
+  uint32 depth = 4;
+  google.protobuf.Value tree = 5;  // Baum wie von der Erweiterung geliefert
+}
+
+message OvfsDeltaPartInfo {
+  uint32 jobid = 1;
+  uint32 fileindex = 2;
+}
+
+message OvfsEntryInfo {
+  string name = 1;
+  string name_b64 = 2;
+  string path = 3;
+  string path_b64 = 4;
+  string kind = 5;
+  uint32 jobid = 6;
+  uint64 fileid = 7;
+  uint32 fileindex = 8;
+  uint32 delta_seq = 9;
+  repeated OvfsDeltaPartInfo delta_parts = 10;
+  uint32 mode = 11;
+  uint32 uid = 12;
+  uint32 gid = 13;
+  uint64 size = 14;
+  int64 mtime = 15;
+  uint32 link_fileindex = 16;
+  uint64 entries = 17;
+  map<string, string> extra_fields = 100;
+}
+
+message OvfsLsResponse {
+  string path = 1;
+  repeated uint32 jobids = 2;
+  string dir = 3;
+  repeated OvfsEntryInfo entries = 4;
+}
+
+message OvfsVersionInfo {
+  uint32 jobid = 1;
+  string level = 2;
+  string job_type = 3;
+  int64 jobtdate = 4;
+  string starttime = 5;
+  uint64 fileid = 6;
+  uint32 fileindex = 7;
+  uint32 delta_seq = 8;
+  string md5 = 9;
+  uint32 mode = 10;
+  uint32 uid = 11;
+  uint32 gid = 12;
+  uint64 size = 13;
+  int64 mtime = 14;
+  map<string, string> extra_fields = 100;
+}
+
+message OvfsVersionsResponse {
+  string path = 1;
+  string client = 2;
+  string dir = 3;
+  string name = 4;
+  repeated OvfsVersionInfo versions = 5;
+}
+
+// ==========================================================================
+// Interaktive Wiederherstellung (S-35)
+// ==========================================================================
+
+message RestoreSessionResponse {
+  string session_id = 1;         // fuer die RestoreTree*-RPCs
+  repeated uint32 jobids = 2;    // Jobs, aus denen der Baum gebaut wurde
+  uint64 files = 3;              // Dateien im Baum
+  string cwd = 4;
+  string text = 5;
+}
+
+message RestoreTreeEntryInfo {
+  string name = 1;
+  bool is_dir = 2;
+  bool marked = 3;
+  uint32 jobid = 4;
+  uint32 fileindex = 5;
+}
+
+message RestoreTreeListResponse {
+  string cwd = 1;
+  repeated RestoreTreeEntryInfo entries = 2;
+  string text = 3;
+}
+
+message RestoreTreeCountResponse {
+  uint64 total = 1;
+  uint64 marked = 2;
+  uint64 bytes = 3;              // estimate
+  string text = 4;
+}
