@@ -304,7 +304,7 @@ service DirectorApi {
   rpc ConfigureUpdate (onesimus.director.commands.ConfigureUpdateCommand) returns (ActionResponse);
   rpc Reload (onesimus.director.commands.ReloadCommand) returns (ActionResponse);
   rpc SetDebug (SetDebugLevelCommand) returns (ActionResponse);
-  rpc SetBandwidth (onesimus.director.commands.SetbandwidthCommand) returns (ActionResponse);
+  rpc SetBandwidth (SetBandwidthLimitCommand) returns (ActionResponse);
   rpc SetDevice (onesimus.director.commands.SetdeviceCommand) returns (ActionResponse);
   rpc SetIp (onesimus.director.commands.SetipCommand) returns (ActionResponse);
   rpc Trace (TraceSwitchCommand) returns (ActionResponse);
@@ -1372,6 +1372,31 @@ message SetDebugLevelCommand {
   bool all = 6     [(onesimus.bare_flag) = true];
   string client = 7;
   string storage = 8;
+}
+
+// setbandwidth limit=<kb/s> client=<name> | storage=<name> | jobid=<id> |
+// job=<name> | ujobid=<name> | state=<zustand> | all
+// Felder 1-7 wie SetbandwidthCommand (director_commands.proto), aber limit
+// optional: limit=0 (Begrenzung aufheben) muss uebertragbar sein, in proto3
+// ist 0 sonst der fehlende Vorgabewert. Drahtkompatibel zu
+// SetbandwidthCommand.
+message SetBandwidthLimitCommand {
+  option (onesimus.command_name) = "setbandwidth";
+  option (onesimus.help_text) = "Sets bandwidth";
+  option (onesimus.usage) = "setbandwidth [ client=<client-name> | storage=<storage-name> "
+                          "| jobid=<jobid> | job=<job-name> | ujobid=<unique-jobid> "
+                          "state=<job_state> | all ] limit=<nn-kbs> [ yes ]";
+  option (onesimus.allowed_in_runscript) = true;
+  option (onesimus.audit_event) = true;
+
+  string client = 1;
+  string storage = 2;
+  int32 jobid = 3;
+  string job = 4;
+  string ujobid = 5;
+  string state = 6;
+  optional int32 limit = 7;  // kb/s, 0 hebt die Begrenzung auf
+  bool all = 8     [(onesimus.bare_flag) = true];
 }
 
 // ==========================================================================
